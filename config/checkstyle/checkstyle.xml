@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/suppressions.xml"/>
+        <property name="optional" value="false"/>
+    </module>
+
+    <module name="NewlineAtEndOfFile"/>
+    <module name="FileTabCharacter"/>
+
+    <module name="TreeWalker">
+        <module name="MatchXpath">
+            <property name="id" value="houseNoLineComment"/>
+            <property name="query" value="//SINGLE_LINE_COMMENT"/>
+            <message key="matchxpath.match" value="[casa] Comentários ''//'' são proibidos. Use nomes expressivos."/>
+        </module>
+        <module name="MatchXpath">
+            <property name="id" value="houseNoBlockComment"/>
+            <property name="query" value="//BLOCK_COMMENT_BEGIN[not(COMMENT_CONTENT[starts-with(@text, '*')])]"/>
+            <message key="matchxpath.match" value="[casa] Comentários ''/* */'' são proibidos. Javadoc só na API pública."/>
+        </module>
+        <module name="MatchXpath">
+            <property name="id" value="houseJavadocOnlyOnPublicApi"/>
+            <property name="query" value="//BLOCK_COMMENT_BEGIN[COMMENT_CONTENT[starts-with(@text, '*')]][not(ancestor::*[self::CLASS_DEF or self::INTERFACE_DEF or self::ENUM_DEF or self::RECORD_DEF or self::ANNOTATION_DEF or self::METHOD_DEF or self::CTOR_DEF or self::COMPACT_CTOR_DEF or self::VARIABLE_DEF or self::ENUM_CONSTANT_DEF][1][MODIFIERS[LITERAL_PUBLIC or LITERAL_PROTECTED] or self::ENUM_CONSTANT_DEF or parent::OBJBLOCK/parent::INTERFACE_DEF])]"/>
+            <message key="matchxpath.match" value="[casa] Javadoc é permitido apenas na API pública (membros public/protected, constantes de enum e membros de interface)."/>
+        </module>
+        <module name="MatchXpath">
+            <property name="id" value="houseNoElse"/>
+            <property name="query" value="//LITERAL_ELSE"/>
+            <message key="matchxpath.match" value="[casa] ''else'' é proibido. Use early return."/>
+        </module>
+        <module name="MatchXpath">
+            <property name="id" value="houseNoSwitch"/>
+            <property name="query" value="//LITERAL_SWITCH"/>
+            <message key="matchxpath.match" value="[casa] ''switch'' é proibido. Use um Map/EnumMap como tabela de lookup."/>
+        </module>
+        <module name="MatchXpath">
+            <property name="id" value="houseNoTryCatch"/>
+            <property name="query" value="//LITERAL_TRY"/>
+            <message key="matchxpath.match" value="[casa] try/catch direto é proibido. Use TryCatch/Result; exceções de terceiros ficam isoladas no adapter."/>
+        </module>
+        <module name="MatchXpath">
+            <property name="id" value="houseNoThrow"/>
+            <property name="query" value="//LITERAL_THROW"/>
+            <message key="matchxpath.match" value="[casa] ''throw'' é proibido. Retorne CoffeeMailResponse/Result."/>
+        </module>
+        <module name="MatchXpath">
+            <property name="id" value="houseFinalLocals"/>
+            <property name="query" value="//SLIST/VARIABLE_DEF[not(MODIFIERS/FINAL)]"/>
+            <message key="matchxpath.match" value="[casa] Variáveis locais devem ser ''final'' (exceção: contadores de laço)."/>
+        </module>
+        <module name="MatchXpath">
+            <property name="id" value="houseFinalFields"/>
+            <property name="query" value="//OBJBLOCK/VARIABLE_DEF[not(MODIFIERS/FINAL)][not(parent::OBJBLOCK/parent::INTERFACE_DEF)][not(ancestor::CLASS_DEF[1][IDENT[ends-with(@text, 'Builder')]])]"/>
+            <message key="matchxpath.match" value="[casa] Campos devem ser ''final'' (exceção: classes *Builder)."/>
+        </module>
+
+        <module name="FinalLocalVariable">
+            <property name="validateEnhancedForLoopVariable" value="true"/>
+        </module>
+        <module name="FinalParameters"/>
+        <module name="ParameterAssignment"/>
+        <module name="ModifiedControlVariable"/>
+        <module name="InnerAssignment"/>
+
+        <module name="NestedIfDepth">
+            <property name="max" value="2"/>
+        </module>
+        <module name="NestedForDepth">
+            <property name="max" value="2"/>
+        </module>
+
+        <module name="MagicNumber">
+            <property name="ignoreHashCodeMethod" value="true"/>
+            <property name="ignoreAnnotation" value="true"/>
+            <property name="ignoreFieldDeclaration" value="true"/>
+        </module>
+        <module name="MultipleStringLiterals">
+            <property name="allowedDuplicates" value="1"/>
+            <property name="ignoreStringsRegexp" value='^""$'/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="houseNoStandardStreams"/>
+            <property name="format" value="System\.(out|err)\b|\.printStackTrace\("/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message" value="[casa] System.out/err e printStackTrace são proibidos."/>
+        </module>
+
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+        <module name="IllegalImport"/>
+        <module name="NeedBraces"/>
+        <module name="OneStatementPerLine"/>
+        <module name="MultipleVariableDeclarations"/>
+        <module name="EqualsHashCode"/>
+        <module name="StringLiteralEquality"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="EmptyStatement"/>
+        <module name="EmptyCatchBlock"/>
+        <module name="IllegalCatch"/>
+        <module name="NoFinalizer"/>
+        <module name="HideUtilityClassConstructor"/>
+        <module name="FinalClass"/>
+        <module name="MissingOverride"/>
+        <module name="UpperEll"/>
+        <module name="ArrayTypeStyle"/>
+    </module>
+</module>
