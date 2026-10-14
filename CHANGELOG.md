@@ -4,7 +4,7 @@ Todas as mudanças relevantes deste projeto são documentadas aqui. O formato se
 
 ## [Não lançado]
 
-## [0.1.0] - Data a definir
+## [0.1.0] - 2026-10-14
 
 ### Adicionado
 
