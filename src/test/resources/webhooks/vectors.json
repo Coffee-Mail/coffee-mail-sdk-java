@@ -1,5 +1,5 @@
 {
-  "source": "coffee-mail-api/src/modules/webhooks/adapters/delivery/webhook-signer.ts",
+  "source": "assinador de webhooks da API CoffeeMail",
   "vectors": [
     {
       "name": "valid_ascii",

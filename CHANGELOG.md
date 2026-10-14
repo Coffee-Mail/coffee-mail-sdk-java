@@ -4,6 +4,10 @@ Todas as mudanças relevantes deste projeto são documentadas aqui. O formato se
 
 ## [Não lançado]
 
+### Removido
+
+- `CoffeeMailBuilder.baseUrl(String)` e `baseUrl(URI)`. O SDK fala só com `https://api.coffeemail.com.br`, para que a chave de API nunca seja enviada a outro host. É uma quebra de compatibilidade intencional, excluída do `verifyApiCompatibility`.
+
 ## [0.1.0] - 2026-10-14
 
 ### Adicionado

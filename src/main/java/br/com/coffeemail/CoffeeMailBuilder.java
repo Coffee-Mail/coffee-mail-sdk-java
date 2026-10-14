@@ -8,7 +8,6 @@ import br.com.coffeemail.internal.http.JdkHttpTransport;
 import br.com.coffeemail.internal.i18n.MessageKey;
 import br.com.coffeemail.internal.i18n.Messages;
 import br.com.coffeemail.transport.HttpTransport;
-import java.net.URI;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Optional;
@@ -22,11 +21,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class CoffeeMailBuilder<C> {
 
-    private static final String TRAILING_SLASH = "/";
-
     private final Function<ClientConfig, C> factory;
     private @Nullable String apiKey;
-    private URI baseUrl = Defaults.BASE_URL;
     private CoffeeMailLocale locale = CoffeeMailLocale.PT_BR;
     private Duration timeout = Defaults.TIMEOUT;
     private @Nullable HttpTransport transport;
@@ -45,27 +41,6 @@ public final class CoffeeMailBuilder<C> {
      */
     public CoffeeMailBuilder<C> apiKey(final String value) {
         this.apiKey = value;
-        return this;
-    }
-
-    /**
-     * URL base da API. Padrão: {@code https://api.coffeemail.com.br}.
-     *
-     * @param value a URL base
-     * @return este builder
-     */
-    public CoffeeMailBuilder<C> baseUrl(final String value) {
-        return baseUrl(URI.create(value));
-    }
-
-    /**
-     * URL base da API. Padrão: {@code https://api.coffeemail.com.br}.
-     *
-     * @param value a URL base
-     * @return este builder
-     */
-    public CoffeeMailBuilder<C> baseUrl(final URI value) {
-        this.baseUrl = value;
         return this;
     }
 
@@ -131,15 +106,10 @@ public final class CoffeeMailBuilder<C> {
                         ApiErrorDetails.of(Messages.format(locale, MessageKey.MISSING_API_KEY))));
         return factory.apply(new ClientConfig(
                 resolvedKey,
-                withoutTrailingSlash(baseUrl),
+                Defaults.BASE_URL,
                 locale,
                 timeout,
                 customTransport == null ? new JdkHttpTransport(timeout) : customTransport,
                 clock));
-    }
-
-    private static URI withoutTrailingSlash(final URI value) {
-        final String text = value.toString();
-        return text.endsWith(TRAILING_SLASH) ? URI.create(text.substring(0, text.length() - 1)) : value;
     }
 }

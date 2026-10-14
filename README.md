@@ -62,7 +62,7 @@ Limitações conhecidas:
 - **`templates().previewById(...)`** não é um endpoint próprio: faz `GET /templates/{id}` e depois `POST /templates/preview` com o HTML do template (duas requisições).
 - **Campanhas agendadas**: `CreateBroadcastInput` não aceita agendamento, porque a API ainda não aceita.
 - **Lacunas do `product.json`**: 18 respostas não têm schema ou declaram status diferente do que a API devolve (ex.: exclusões que respondem `204`), e `domains.delete` exige no spec uma credencial de reautenticação que a API dispensa para chaves de API. O teste de contrato lista essas lacunas explicitamente e falha quando o spec for corrigido, para que a lista seja removida.
-- **Origem do spec**: `spec/product.json` é um snapshot copiado do `coffee-mail-api` (repo irmão em disco ou `COFFEEMAIL_OPENAPI_SPEC`); ainda não há canal de distribuição do contrato.
+- **Origem do spec**: `spec/product.json` é um snapshot do spec OpenAPI público da API de produto (`https://api.coffeemail.com.br/v1/product/docs/json`), atualizado com `./gradlew syncOpenApi`.
 
 ## 📋 Requisitos
 
@@ -157,11 +157,11 @@ Os futuros nunca completam com exceção por erro de API ou de rede: o erro vem 
 | Método | Tipo | Padrão | Variável de ambiente |
 | --- | --- | --- | --- |
 | `apiKey(...)` | `String` | lida do ambiente | `COFFEEMAIL_API_KEY` |
-| `baseUrl(...)` | `String` ou `URI` | `https://api.coffeemail.com.br` (barra final é removida) | — |
 | `locale(...)` | `CoffeeMailLocale` (`PT_BR`, `EN`) | `PT_BR` | — |
 | `timeout(...)` | `Duration` | 10 segundos por requisição | — |
 | `transport(...)` | `HttpTransport` | `java.net.http.HttpClient` (segue redirecionamentos) | — |
 
+- O host da API é fixo em `https://api.coffeemail.com.br` e não é configurável. É uma decisão de segurança: a chave de API só trafega para o host oficial.
 - `build()` lança `AuthenticationException` se não houver chave (nem explícita nem no ambiente) ou se ela estiver em branco.
 - `locale` define o idioma das mensagens geradas pelo SDK e o cabeçalho `Accept-Language` enviado à API.
 - Toda requisição envia `Authorization: Bearer <chave>` e `User-Agent: coffeemail-java/<versão>`. `CoffeeMail.version()` retorna a versão.
@@ -492,7 +492,7 @@ public ResponseEntity<Void> receive(@RequestBody String rawBody, @RequestHeader 
 | `VerifyWebhookInput.fromHeaders(String ou byte[] payload, Map<String, String> headers, String secret)` | monta a entrada a partir dos cabeçalhos (nomes sem diferenciar maiúsculas) |
 | `new VerifyWebhookInput(payload, signature, timestamp, idempotencyKey, secret)` | monta a entrada campo a campo |
 
-O `WebhookVerifierTest` valida a verificação com vetores gerados pelo assinador do `coffee-mail-api` (`src/test/resources/webhooks/vectors.json`). Use o `x-webhook-idempotency-key` para descartar entregas duplicadas.
+O `WebhookVerifierTest` valida a verificação com vetores gerados pelo assinador da API (`src/test/resources/webhooks/vectors.json`). Use o `x-webhook-idempotency-key` para descartar entregas duplicadas.
 
 ## 🔖 Versionamento e releases
 
@@ -531,7 +531,7 @@ flowchart LR
 | Javadoc | `-Xdoclint:all,-missing -Werror` |
 | Compatibilidade | `verifyApiCompatibility` contra `apiBaselineVersion` |
 | Versão | `verifyVersionSync` (formato semver) |
-| Snapshot do spec | `verifyOpenApiSnapshot`: falha se `spec/product.json` divergir do spec do `coffee-mail-api`; é pulada quando a fonte não está disponível (como no CI) |
+| Snapshot do spec | `verifyOpenApiSnapshot`: falha se `spec/product.json` divergir do spec em `COFFEEMAIL_OPENAPI_SPEC`; é pulada quando a variável não está definida (como no CI) |
 
 CI ([`ci.yml`](.github/workflows/ci.yml)): `check` em JDK 17, 21 e 25 (`-PtestJavaVersion`), relatório de cobertura como artefato no JDK 21, e um job de smoke test que publica no Maven local e roda `smoke-test/` em module path e classpath.
 
@@ -547,7 +547,7 @@ IDEs baseadas no Eclipse JDT (VS Code/Antigravity com a extensão Java da Red Ha
 | `./gradlew spotlessApply` | formata o código |
 | `./gradlew verifyApiCompatibility` | só a verificação de compatibilidade contra a `0.1.0` |
 | `./gradlew jacocoTestReport` | relatório de cobertura em `build/reports/jacoco/test/html` |
-| `./gradlew syncOpenApi` | copia o spec para `spec/product.json` a partir de `COFFEEMAIL_OPENAPI_SPEC` (arquivo ou URL) ou de `../coffee-mail-api/openapi/product.json` |
+| `./gradlew syncOpenApi` | copia o spec para `spec/product.json` a partir de `COFFEEMAIL_OPENAPI_SPEC` (arquivo ou URL) ou, sem ela, do spec público da API |
 | `./gradlew verifyOpenApiSnapshot` | confere se o snapshot está igual ao spec de origem |
 | `./gradlew publishToMavenLocal` | publica no `~/.m2` |
 | `./gradlew -p smoke-test run -Pmodular=true` | smoke test do artefato publicado localmente (`-Pmodular=false` para classpath; `-PsdkVersion=` muda a versão, padrão `0.1.0`) |
@@ -587,8 +587,6 @@ Vulnerabilidades: não abra issue pública; siga o [SECURITY.md](SECURITY.md). C
 
 | Repositório | Papel |
 | --- | --- |
-| [coffee-mail-api](https://github.com/Coffee-Mail/coffee-mail-api) | Backend: API HTTP, filas, worker de envio, billing |
-| [coffee-mail-web](https://github.com/Coffee-Mail/coffee-mail-web) | Landing, documentação pública e dashboard |
 | [coffee-mail-sdk-node](https://github.com/Coffee-Mail/coffee-mail-sdk-node) | SDK oficial Node.js/TypeScript (`@coffeemail/node`) |
 | [coffee-mail-sdk-python](https://github.com/Coffee-Mail/coffee-mail-sdk-python) | SDK oficial Python (`coffeemail`) |
 | [coffee-mail-sdk-php](https://github.com/Coffee-Mail/coffee-mail-sdk-php) | SDK oficial PHP (`coffeemail/coffeemail-php`) |

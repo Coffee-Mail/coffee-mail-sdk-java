@@ -175,8 +175,8 @@ val verifyVersionSync = tasks.register("verifyVersionSync") {
     }
 }
 
-val openApiSource = providers.environmentVariable("COFFEEMAIL_OPENAPI_SPEC")
-    .orElse(layout.projectDirectory.file("../coffee-mail-api/openapi/product.json").asFile.absolutePath)
+val openApiSourceOverride = providers.environmentVariable("COFFEEMAIL_OPENAPI_SPEC")
+val openApiSource = openApiSourceOverride.orElse("https://api.coffeemail.com.br/v1/product/docs/json")
 val openApiSnapshot = layout.projectDirectory.file("spec/product.json")
 
 val readOpenApi: (String) -> ByteArray? = { location ->
@@ -191,7 +191,7 @@ val readOpenApi: (String) -> ByteArray? = { location ->
 
 val syncOpenApi = tasks.register("syncOpenApi") {
     group = "openapi"
-    description = "Atualiza spec/product.json a partir de COFFEEMAIL_OPENAPI_SPEC ou do coffee-mail-api irmão."
+    description = "Atualiza spec/product.json a partir de COFFEEMAIL_OPENAPI_SPEC ou do spec público da API."
     val source = openApiSource
     val target = openApiSnapshot
     val reader = readOpenApi
@@ -203,14 +203,15 @@ val syncOpenApi = tasks.register("syncOpenApi") {
 
 val verifyOpenApiSnapshot = tasks.register("verifyOpenApiSnapshot") {
     group = "verification"
-    description = "Falha se spec/product.json divergir do spec da API. Pula quando a fonte não está disponível (CI)."
-    val source = openApiSource
+    description = "Falha se spec/product.json divergir do spec em COFFEEMAIL_OPENAPI_SPEC. Pula quando a variável não está definida (CI)."
+    val source = openApiSourceOverride
     val target = openApiSnapshot
     val reader = readOpenApi
     doLast {
-        val content = reader(source.get())
+        val location = source.orNull
+        val content = location?.let(reader)
         if (content == null) {
-            logger.lifecycle("Spec OpenAPI de origem indisponível em ${source.get()}; verificação do snapshot pulada.")
+            logger.lifecycle("Spec OpenAPI de origem indisponível (${location ?: "COFFEEMAIL_OPENAPI_SPEC não definida"}); verificação do snapshot pulada.")
             return@doLast
         }
         check(content.contentEquals(target.asFile.readBytes())) {
@@ -286,6 +287,10 @@ val verifyApiCompatibility = tasks.register<me.champeau.gradle.japicmp.JapicmpTa
     ignoreMissingClasses = true
     packageExcludes = listOf("br.com.coffeemail.internal*", "br.com.coffeemail.models.support")
     compatibilityChangeExcludes = listOf("METHOD_ADDED_TO_INTERFACE")
+    methodExcludes = listOf(
+        "br.com.coffeemail.CoffeeMailBuilder#baseUrl(java.lang.String)",
+        "br.com.coffeemail.CoffeeMailBuilder#baseUrl(java.net.URI)",
+    )
     htmlOutputFile = layout.buildDirectory.file("reports/japicmp/index.html")
 }
 
