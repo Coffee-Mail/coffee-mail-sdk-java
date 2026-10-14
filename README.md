@@ -36,7 +36,7 @@
 
 ## ✨ Visão geral
 
-- **Mesmo contrato dos SDKs oficiais** (Node.js, Python, PHP): mesmos recursos, mesmos métodos e retorno em envelope em vez de exceção.
+- **Mesmo contrato dos SDKs oficiais** (Node.js, Python, PHP, Go): mesmos recursos, mesmos métodos e retorno em envelope em vez de exceção.
 - **Síncrono e assíncrono**: `CoffeeMail` e `CoffeeMailAsync` (`CompletableFuture`) expõem as mesmas operações. A paridade é verificada por teste (`ApiParityTest`).
 - **Nenhuma chamada de API lança exceção**: o resultado vem em `CoffeeMailResponse<T>` (sucesso ou falha, nunca os dois). `unwrap()` existe para quem prefere exceções.
 - **Tipado**: modelos são `record`s imutáveis; enums de resposta têm o valor `UNKNOWN` para tolerar valores novos da API; builders recebem os campos obrigatórios no construtor (`SendEmailInput.builder(from, to)`).
@@ -591,6 +591,7 @@ Vulnerabilidades: não abra issue pública; siga o [SECURITY.md](SECURITY.md). C
 | [coffee-mail-sdk-python](https://github.com/Coffee-Mail/coffee-mail-sdk-python) | SDK oficial Python (`coffeemail`) |
 | [coffee-mail-sdk-php](https://github.com/Coffee-Mail/coffee-mail-sdk-php) | SDK oficial PHP (`coffeemail/coffeemail-php`) |
 | **coffee-mail-sdk-java** (você está aqui) | SDK oficial Java (`br.com.coffeemail:coffeemail-java`) |
+| [coffee-mail-sdk-go](https://github.com/Coffee-Mail/coffee-mail-sdk-go) | SDK oficial Go (`github.com/Coffee-Mail/coffee-mail-sdk-go`) |
 | [coffee-mail-laravel](https://github.com/Coffee-Mail/coffee-mail-laravel) | Integração Laravel (`coffeemail/coffeemail-laravel`) |
 | [coffee-mail-sdk-workbench](https://github.com/Coffee-Mail/coffee-mail-sdk-workbench) | Bancada de validação dos SDKs por spec (inclui `runner-java`) |
 
