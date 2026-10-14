@@ -8,6 +8,9 @@ plugins {
     jacoco
     alias(libs.plugins.spotless)
     alias(libs.plugins.errorprone)
+    alias(libs.plugins.maven.publish)
+    alias(libs.plugins.japicmp)
+    alias(libs.plugins.cyclonedx)
 }
 
 val compileJdkVersion = 21
@@ -216,7 +219,78 @@ val verifyOpenApiSnapshot = tasks.register("verifyOpenApiSnapshot") {
     }
 }
 
+mavenPublishing {
+    publishToMavenCentral(automaticRelease = true)
+    if (providers.gradleProperty("signingInMemoryKey").isPresent) {
+        signAllPublications()
+    }
+    coordinates(project.group.toString(), "coffeemail-java", sdkVersion)
+    pom {
+        name = providers.gradleProperty("pomName")
+        description =
+            "SDK oficial da CoffeeMail para Java: envio transacional, domínios, templates, audiências, campanhas," +
+                " supressões, webhooks e estatísticas."
+        url = providers.gradleProperty("pomUrl")
+        inceptionYear = "2026"
+        licenses {
+            license {
+                name = "MIT License"
+                url = "https://opensource.org/license/mit"
+                distribution = "repo"
+            }
+        }
+        developers {
+            developer {
+                id = "dev-etto"
+                name = providers.gradleProperty("pomDeveloperName")
+                organization = "CoffeeMail"
+                organizationUrl = "https://github.com/Coffee-Mail"
+            }
+        }
+        scm {
+            url = providers.gradleProperty("pomUrl")
+            connection = "scm:git:https://github.com/Coffee-Mail/coffee-mail-sdk-java.git"
+            developerConnection = "scm:git:ssh://git@github.com/Coffee-Mail/coffee-mail-sdk-java.git"
+        }
+        issueManagement {
+            system = "GitHub"
+            url = "https://github.com/Coffee-Mail/coffee-mail-sdk-java/issues"
+        }
+    }
+}
+
+tasks.named<org.cyclonedx.gradle.CyclonedxDirectTask>("cyclonedxDirectBom") {
+    includeConfigs = listOf("runtimeClasspath")
+    projectType = org.cyclonedx.model.Component.Type.LIBRARY
+    componentName = "coffeemail-java"
+}
+
+val apiBaselineVersion = providers.gradleProperty("apiBaselineVersion").orElse("")
+val apiBaseline = configurations.detachedConfiguration().apply {
+    dependencies.addLater(apiBaselineVersion.filter(String::isNotBlank).map { baseline ->
+        project.dependencies.create("br.com.coffeemail:coffeemail-java:$baseline") as ExternalModuleDependency
+    })
+    isTransitive = false
+}
+
+val verifyApiCompatibility = tasks.register<me.champeau.gradle.japicmp.JapicmpTask>("verifyApiCompatibility") {
+    group = "verification"
+    description = "Falha se a API pública quebrar a compatibilidade com a versão em apiBaselineVersion."
+    val baseline = apiBaselineVersion
+    onlyIf { baseline.get().isNotBlank() }
+    oldClasspath.from(apiBaseline)
+    newClasspath.from(tasks.jar)
+    onlyModified = true
+    failOnSourceIncompatibility = true
+    failOnModification = false
+    ignoreMissingClasses = true
+    packageExcludes = listOf("br.com.coffeemail.internal*", "br.com.coffeemail.models.support")
+    compatibilityChangeExcludes = listOf("METHOD_ADDED_TO_INTERFACE")
+    htmlOutputFile = layout.buildDirectory.file("reports/japicmp/index.html")
+}
+
 tasks.check {
+    dependsOn(verifyApiCompatibility)
     dependsOn(
         tasks.jacocoTestCoverageVerification,
         tasks.javadoc,
