@@ -1,0 +1,949 @@
+{
+  "ids": {
+    "email": "3f2b8c1e-7a4d-4e5f-9b6a-1c2d3e4f5a60",
+    "key": "8c1e3f2b-4d7a-4f5e-8a6b-2d3e4f5a601c",
+    "domain": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+    "webhook": "7a4d3f2b-8c1e-4e5f-ab6a-3e4f5a601c2d",
+    "delivery": "9b6a3f2b-8c1e-4a7d-8e5f-4f5a601c2d3e",
+    "event": "1c2d3f2b-8c1e-4a7d-9e5f-5a601c2d3e4f",
+    "suppression": "2d3e3f2b-8c1e-4a7d-ae5f-601c2d3e4f5a",
+    "sender": "3e4f3f2b-8c1e-4a7d-be5f-01c2d3e4f5a6",
+    "audience": "4f5a3f2b-8c1e-4a7d-8e5f-1c2d3e4f5a60",
+    "contact": "5a6b3f2b-8c1e-4a7d-9e5f-c2d3e4f5a601",
+    "broadcast": "6b7c3f2b-8c1e-4a7d-ae5f-2d3e4f5a601c",
+    "template": "7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d",
+    "org": "8d9e3f2b-8c1e-4a7d-8e5f-4f5a601c2d3e",
+    "token": "9e0f3f2b-8c1e-4a7d-9e5f-5a601c2d3e4f"
+  },
+  "fixtures": {
+    "emails.send": {
+      "status": 202,
+      "body": {
+        "id": "3f2b8c1e-7a4d-4e5f-9b6a-1c2d3e4f5a60",
+        "status": "queued",
+        "queuedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "emails.list": {
+      "status": 200,
+      "body": {
+        "emails": [
+          {
+            "id": "3f2b8c1e-7a4d-4e5f-9b6a-1c2d3e4f5a60",
+            "from": "Loja <contato@loja.com.br>",
+            "to": [
+              "cliente@gmail.com"
+            ],
+            "cc": null,
+            "bcc": null,
+            "subject": "Pedido confirmado",
+            "status": "delivered",
+            "attempts": 1,
+            "lastError": null,
+            "messageId": "<abc@coffeemail>",
+            "createdAt": "2026-10-14T12:00:00.000Z",
+            "scheduledAt": null,
+            "sentAt": "2026-10-14T12:00:00.000Z",
+            "deliveredAt": "2026-10-14T12:00:00.000Z",
+            "bouncedAt": null,
+            "failedAt": null,
+            "complainedAt": null,
+            "suppressedAt": null,
+            "openedAt": null,
+            "firstClickedAt": null,
+            "openCount": 0,
+            "clickCount": 0,
+            "proxyOpenCount": 0,
+            "tags": [
+              {
+                "name": "plano",
+                "value": "pro"
+              }
+            ],
+            "html": "<h1>Obrigado</h1>",
+            "text": null,
+            "apiKey": {
+              "id": "8c1e3f2b-4d7a-4f5e-8a6b-2d3e4f5a601c",
+              "name": "Produção"
+            }
+          }
+        ],
+        "nextCursor": "c_2"
+      }
+    },
+    "emails.sendBatch": {
+      "status": 202,
+      "body": [
+        {
+          "ok": true,
+          "data": {
+            "id": "3f2b8c1e-7a4d-4e5f-9b6a-1c2d3e4f5a60",
+            "status": "queued",
+            "queuedAt": "2026-10-14T12:00:00.000Z"
+          }
+        },
+        {
+          "ok": false,
+          "error": "Domínio não verificado"
+        }
+      ]
+    },
+    "emails.getTags": {
+      "status": 200,
+      "body": {
+        "tags": [
+          {
+            "name": "plano",
+            "values": [
+              "pro",
+              "free"
+            ]
+          }
+        ]
+      }
+    },
+    "emails.get": {
+      "status": 200,
+      "body": {
+        "id": "3f2b8c1e-7a4d-4e5f-9b6a-1c2d3e4f5a60",
+        "from": "Loja <contato@loja.com.br>",
+        "to": [
+          "cliente@gmail.com"
+        ],
+        "cc": null,
+        "bcc": null,
+        "subject": "Pedido confirmado",
+        "status": "delivered",
+        "attempts": 1,
+        "lastError": null,
+        "messageId": "<abc@coffeemail>",
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "scheduledAt": null,
+        "sentAt": "2026-10-14T12:00:00.000Z",
+        "deliveredAt": "2026-10-14T12:00:00.000Z",
+        "bouncedAt": null,
+        "failedAt": null,
+        "complainedAt": null,
+        "suppressedAt": null,
+        "openedAt": null,
+        "firstClickedAt": null,
+        "openCount": 0,
+        "clickCount": 0,
+        "proxyOpenCount": 0,
+        "tags": [
+          {
+            "name": "plano",
+            "value": "pro"
+          }
+        ],
+        "html": "<h1>Obrigado</h1>",
+        "text": null
+      }
+    },
+    "emails.getEvents": {
+      "status": 200,
+      "body": {
+        "id": "3f2b8c1e-7a4d-4e5f-9b6a-1c2d3e4f5a60",
+        "events": [
+          {
+            "type": "queued",
+            "timestamp": "2026-10-14T12:00:00.000Z",
+            "metadata": {}
+          },
+          {
+            "type": "delivered",
+            "timestamp": "2026-10-14T12:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "emails.cancel": {
+      "status": 204,
+      "body": null
+    },
+    "emails.resend": {
+      "status": 202,
+      "body": {
+        "id": "3f2b8c1e-7a4d-4e5f-9b6a-1c2d3e4f5a60",
+        "status": "queued",
+        "queuedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "webhooks.create": {
+      "status": 201,
+      "body": {
+        "id": "7a4d3f2b-8c1e-4e5f-ab6a-3e4f5a601c2d",
+        "url": "https://loja.com.br/webhooks",
+        "events": [
+          "email.delivered",
+          "email.bounced"
+        ],
+        "status": "active",
+        "description": "Produção",
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "secret": "whsec_ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12ab12"
+      }
+    },
+    "webhooks.list": {
+      "status": 200,
+      "body": {
+        "webhooks": [
+          {
+            "id": "7a4d3f2b-8c1e-4e5f-ab6a-3e4f5a601c2d",
+            "url": "https://loja.com.br/webhooks",
+            "events": [
+              "email.delivered",
+              "email.bounced"
+            ],
+            "status": "active",
+            "description": "Produção",
+            "createdAt": "2026-10-14T12:00:00.000Z",
+            "hasSecret": true
+          }
+        ]
+      }
+    },
+    "webhooks.get": {
+      "status": 200,
+      "body": {
+        "id": "7a4d3f2b-8c1e-4e5f-ab6a-3e4f5a601c2d",
+        "url": "https://loja.com.br/webhooks",
+        "events": [
+          "email.delivered",
+          "email.bounced"
+        ],
+        "status": "active",
+        "description": "Produção",
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "secret": null,
+        "secretPreview": "whsec_ab12…"
+      }
+    },
+    "webhooks.delete": {
+      "status": 204,
+      "body": null
+    },
+    "webhooks.update": {
+      "status": 200,
+      "body": {
+        "id": "7a4d3f2b-8c1e-4e5f-ab6a-3e4f5a601c2d",
+        "url": "https://loja.com.br/webhooks",
+        "events": [
+          "email.delivered",
+          "email.bounced"
+        ],
+        "status": "active",
+        "description": "Produção",
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "secret": null,
+        "secretPreview": "whsec_ab12…"
+      }
+    },
+    "webhooks.toggle": {
+      "status": 200,
+      "body": {
+        "id": "7a4d3f2b-8c1e-4e5f-ab6a-3e4f5a601c2d",
+        "status": "paused"
+      }
+    },
+    "webhooks.test": {
+      "status": 200,
+      "body": {
+        "status": "success",
+        "statusCode": 200,
+        "body": "ok",
+        "error": null
+      }
+    },
+    "webhooks.listDeliveries": {
+      "status": 200,
+      "body": {
+        "deliveries": [
+          {
+            "id": "9b6a3f2b-8c1e-4a7d-8e5f-4f5a601c2d3e",
+            "webhookId": "7a4d3f2b-8c1e-4e5f-ab6a-3e4f5a601c2d",
+            "emailEventId": "1c2d3f2b-8c1e-4a7d-9e5f-5a601c2d3e4f",
+            "eventType": "email.delivered",
+            "responseStatus": 200,
+            "responseBody": "ok",
+            "attempts": 1,
+            "lastError": null,
+            "status": "success",
+            "nextRunAt": "2026-10-14T12:00:00.000Z",
+            "createdAt": "2026-10-14T12:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "webhooks.rotateSecret": {
+      "status": 200,
+      "body": {
+        "webhookId": "7a4d3f2b-8c1e-4e5f-ab6a-3e4f5a601c2d",
+        "secret": "whsec_cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34cd34"
+      }
+    },
+    "domains.create": {
+      "status": 201,
+      "body": {
+        "id": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+        "name": "loja.com.br",
+        "status": "pending",
+        "dkimRecordsToPublish": [
+          {
+            "type": "TXT",
+            "host": "cm1._domainkey",
+            "value": "v=DKIM1; k=rsa; p=MIIB",
+            "ttl": 3600
+          }
+        ]
+      }
+    },
+    "domains.list": {
+      "status": 200,
+      "body": {
+        "domains": [
+          {
+            "id": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+            "name": "loja.com.br",
+            "status": "verified",
+            "statusReason": null,
+            "dkimSelector": "cm1",
+            "dkimPublicKey": "MIIB",
+            "verifiedAt": "2026-10-14T12:00:00.000Z",
+            "lastCheckAt": "2026-10-14T12:00:00.000Z",
+            "createdAt": "2026-10-14T12:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "domains.get": {
+      "status": 200,
+      "body": {
+        "id": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+        "name": "loja.com.br",
+        "status": "verified",
+        "statusReason": null,
+        "dkimSelector": "cm1",
+        "dkimPublicKey": "MIIB",
+        "verifiedAt": "2026-10-14T12:00:00.000Z",
+        "lastCheckAt": "2026-10-14T12:00:00.000Z",
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "sendingIdentity": {
+          "provider": "aws_ses",
+          "state": "ready",
+          "lastSyncedAt": "2026-10-14T12:00:00.000Z"
+        },
+        "dnsRecordsToPublish": [
+          {
+            "type": "TXT",
+            "host": "cm1._domainkey",
+            "value": "v=DKIM1; k=rsa; p=MIIB",
+            "ttl": 3600
+          }
+        ]
+      }
+    },
+    "domains.delete": {
+      "status": 200,
+      "body": {
+        "ok": true
+      }
+    },
+    "domains.verify": {
+      "status": 200,
+      "body": {
+        "id": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+        "name": "loja.com.br",
+        "status": "verified",
+        "statusReason": null,
+        "verifiedAt": "2026-10-14T12:00:00.000Z",
+        "checks": {
+          "spf": {
+            "ok": true,
+            "resolution": "found",
+            "expected": "v=spf1 include:coffeemail.com.br ~all",
+            "got": "v=spf1 include:coffeemail.com.br ~all",
+            "matches": [
+              "v=spf1 include:coffeemail.com.br ~all"
+            ]
+          },
+          "dkim": {
+            "ok": true,
+            "resolution": "found",
+            "expected": "v=spf1 include:coffeemail.com.br ~all",
+            "got": "v=spf1 include:coffeemail.com.br ~all",
+            "matches": [
+              "v=spf1 include:coffeemail.com.br ~all"
+            ]
+          },
+          "dmarc": {
+            "ok": true,
+            "resolution": "found",
+            "expected": "v=spf1 include:coffeemail.com.br ~all",
+            "got": "v=spf1 include:coffeemail.com.br ~all",
+            "matches": [
+              "v=spf1 include:coffeemail.com.br ~all"
+            ]
+          },
+          "ownership": {
+            "ok": true,
+            "resolution": "found",
+            "expected": "v=spf1 include:coffeemail.com.br ~all",
+            "got": "v=spf1 include:coffeemail.com.br ~all",
+            "matches": [
+              "v=spf1 include:coffeemail.com.br ~all"
+            ]
+          }
+        },
+        "requiredChecks": [
+          "spf",
+          "dkim",
+          "dmarc"
+        ],
+        "sendingIdentity": {
+          "provider": "aws_ses",
+          "state": "ready",
+          "lastSyncedAt": "2026-10-14T12:00:00.000Z"
+        }
+      }
+    },
+    "domains.getHealth": {
+      "status": 200,
+      "body": {
+        "domainId": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+        "domain": "loja.com.br",
+        "status": "healthy",
+        "spf": {
+          "ok": true,
+          "expected": "v=DMARC1",
+          "got": "v=DMARC1; p=none"
+        },
+        "dkim": {
+          "ok": true,
+          "expected": "v=DMARC1",
+          "got": "v=DMARC1; p=none"
+        },
+        "dmarc": {
+          "ok": true,
+          "expected": "v=DMARC1",
+          "got": "v=DMARC1; p=none"
+        },
+        "checkedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "domains.getWarmupStatus": {
+      "status": 200,
+      "body": {
+        "domainId": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+        "currentDay": 3,
+        "dailyQuota": 500,
+        "sentToday": 120,
+        "remainingToday": 380,
+        "quotaUsedPercent": 24,
+        "lastSendDate": "2026-10-14"
+      }
+    },
+    "suppressions.create": {
+      "status": 201,
+      "body": {
+        "id": "2d3e3f2b-8c1e-4a7d-ae5f-601c2d3e4f5a",
+        "email": "bloqueado@gmail.com",
+        "reason": "bounce",
+        "source": "auto",
+        "category": "bounce",
+        "status": "active",
+        "expiresAt": null,
+        "createdAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "suppressions.list": {
+      "status": 200,
+      "body": {
+        "suppressions": [
+          {
+            "id": "2d3e3f2b-8c1e-4a7d-ae5f-601c2d3e4f5a",
+            "email": "bloqueado@gmail.com",
+            "reason": "bounce",
+            "source": "auto",
+            "category": "bounce",
+            "status": "active",
+            "expiresAt": null,
+            "createdAt": "2026-10-14T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    "suppressions.bulkCreate": {
+      "status": 200,
+      "body": {
+        "insertedCount": 2
+      }
+    },
+    "suppressions.delete": {
+      "status": 204,
+      "body": null
+    },
+    "suppressions.get": {
+      "status": 200,
+      "body": {
+        "id": "2d3e3f2b-8c1e-4a7d-ae5f-601c2d3e4f5a",
+        "email": "bloqueado@gmail.com",
+        "reason": "bounce",
+        "source": "auto",
+        "category": "bounce",
+        "status": "active",
+        "expiresAt": null,
+        "createdAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "suppressions.reactivate": {
+      "status": 204,
+      "body": null
+    },
+    "senders.create": {
+      "status": 201,
+      "body": {
+        "id": "3e4f3f2b-8c1e-4a7d-be5f-01c2d3e4f5a6",
+        "email": "joao@loja.com.br",
+        "displayName": "João",
+        "verifiedAt": null,
+        "active": true,
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "verificationToken": "9e0f3f2b-8c1e-4a7d-9e5f-5a601c2d3e4f"
+      }
+    },
+    "senders.list": {
+      "status": 200,
+      "body": {
+        "senders": [
+          {
+            "id": "3e4f3f2b-8c1e-4a7d-be5f-01c2d3e4f5a6",
+            "email": "joao@loja.com.br",
+            "displayName": "João",
+            "verifiedAt": null,
+            "active": true,
+            "createdAt": "2026-10-14T12:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "senders.verify": {
+      "status": 200,
+      "body": {
+        "id": "3e4f3f2b-8c1e-4a7d-be5f-01c2d3e4f5a6",
+        "email": "joao@loja.com.br"
+      }
+    },
+    "senders.delete": {
+      "status": 204,
+      "body": null
+    },
+    "audiences.list": {
+      "status": 200,
+      "body": {
+        "audiences": [
+          {
+            "id": "4f5a3f2b-8c1e-4a7d-8e5f-1c2d3e4f5a60",
+            "name": "Clientes",
+            "description": null,
+            "active": true,
+            "contactsCount": 42,
+            "createdAt": "2026-10-14T12:00:00.000Z",
+            "updatedAt": "2026-10-14T12:00:00.000Z"
+          }
+        ],
+        "total": 1
+      }
+    },
+    "audiences.create": {
+      "status": 201,
+      "body": {
+        "id": "4f5a3f2b-8c1e-4a7d-8e5f-1c2d3e4f5a60",
+        "name": "Clientes",
+        "description": null,
+        "active": true,
+        "contactsCount": 42,
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "updatedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "audiences.get": {
+      "status": 200,
+      "body": {
+        "id": "4f5a3f2b-8c1e-4a7d-8e5f-1c2d3e4f5a60",
+        "name": "Clientes",
+        "description": null,
+        "active": true,
+        "contactsCount": 42,
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "updatedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "audiences.update": {
+      "status": 200,
+      "body": {
+        "id": "4f5a3f2b-8c1e-4a7d-8e5f-1c2d3e4f5a60"
+      }
+    },
+    "audiences.delete": {
+      "status": 204,
+      "body": null
+    },
+    "contacts.list": {
+      "status": 200,
+      "body": {
+        "contacts": [
+          {
+            "id": "5a6b3f2b-8c1e-4a7d-9e5f-c2d3e4f5a601",
+            "email": "cliente@gmail.com",
+            "firstName": "Ana",
+            "lastName": null,
+            "metadata": {
+              "plano": "pro"
+            },
+            "createdAt": "2026-10-14T12:00:00.000Z"
+          }
+        ],
+        "total": 1
+      }
+    },
+    "contacts.create": {
+      "status": 201,
+      "body": {
+        "id": "5a6b3f2b-8c1e-4a7d-9e5f-c2d3e4f5a601",
+        "email": "cliente@gmail.com",
+        "firstName": "Ana",
+        "lastName": null,
+        "metadata": {
+          "plano": "pro"
+        },
+        "createdAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "contacts.bulkAdd": {
+      "status": 200,
+      "body": {
+        "inserted": 1,
+        "skipped": 1,
+        "errors": [
+          {
+            "email": "invalido",
+            "reason": "E-mail inválido"
+          }
+        ]
+      }
+    },
+    "contacts.update": {
+      "status": 200,
+      "body": {
+        "id": "5a6b3f2b-8c1e-4a7d-9e5f-c2d3e4f5a601"
+      }
+    },
+    "contacts.delete": {
+      "status": 204,
+      "body": null
+    },
+    "broadcasts.create": {
+      "status": 201,
+      "body": {
+        "id": "6b7c3f2b-8c1e-4a7d-ae5f-2d3e4f5a601c",
+        "audienceId": "4f5a3f2b-8c1e-4a7d-8e5f-1c2d3e4f5a60",
+        "audienceName": "Clientes",
+        "templateId": "7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d",
+        "subject": "Novidades",
+        "fromEmail": "news@loja.com.br",
+        "replyTo": null,
+        "status": "draft",
+        "scheduledAt": null,
+        "sentAt": null,
+        "cancelledAt": null,
+        "recipientsTotal": 0,
+        "recipientsQueued": 0,
+        "recipientsFailed": 0,
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "updatedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "broadcasts.list": {
+      "status": 200,
+      "body": {
+        "broadcasts": [
+          {
+            "id": "6b7c3f2b-8c1e-4a7d-ae5f-2d3e4f5a601c",
+            "audienceId": "4f5a3f2b-8c1e-4a7d-8e5f-1c2d3e4f5a60",
+            "audienceName": "Clientes",
+            "templateId": "7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d",
+            "subject": "Novidades",
+            "fromEmail": "news@loja.com.br",
+            "replyTo": null,
+            "status": "draft",
+            "scheduledAt": null,
+            "sentAt": null,
+            "cancelledAt": null,
+            "recipientsTotal": 0,
+            "recipientsQueued": 0,
+            "recipientsFailed": 0,
+            "createdAt": "2026-10-14T12:00:00.000Z",
+            "updatedAt": "2026-10-14T12:00:00.000Z"
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    "broadcasts.get": {
+      "status": 200,
+      "body": {
+        "id": "6b7c3f2b-8c1e-4a7d-ae5f-2d3e4f5a601c",
+        "audienceId": "4f5a3f2b-8c1e-4a7d-8e5f-1c2d3e4f5a60",
+        "audienceName": "Clientes",
+        "templateId": "7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d",
+        "subject": "Novidades",
+        "fromEmail": "news@loja.com.br",
+        "replyTo": null,
+        "status": "draft",
+        "scheduledAt": null,
+        "sentAt": null,
+        "cancelledAt": null,
+        "recipientsTotal": 0,
+        "recipientsQueued": 0,
+        "recipientsFailed": 0,
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "updatedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "broadcasts.send": {
+      "status": 200,
+      "body": {
+        "id": "6b7c3f2b-8c1e-4a7d-ae5f-2d3e4f5a601c",
+        "status": "sending",
+        "recipientsTotal": 42,
+        "recipientsQueued": 42
+      }
+    },
+    "broadcasts.testSend": {
+      "status": 200,
+      "body": {
+        "success": true,
+        "messageId": "<msg@coffeemail>",
+        "recipient": "teste@loja.com.br"
+      }
+    },
+    "broadcasts.cancel": {
+      "status": 200,
+      "body": {
+        "id": "6b7c3f2b-8c1e-4a7d-ae5f-2d3e4f5a601c",
+        "status": "cancelled",
+        "cancelledAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "stats.get": {
+      "status": 200,
+      "body": {
+        "totalSent": 20,
+        "totalDelivered": 18,
+        "totalBounced": 2,
+        "totalFailed": 0,
+        "totalOpened": 10,
+        "totalClicked": 4,
+        "deliveryRate": 0.9,
+        "openRate": 0.5,
+        "clickRate": 0.2,
+        "breakdown": {
+          "transactional": {
+            "sent": 10,
+            "delivered": 9,
+            "bounced": 1,
+            "opened": 5,
+            "clicked": 2
+          },
+          "broadcast": {
+            "sent": 10,
+            "delivered": 9,
+            "bounced": 1,
+            "opened": 5,
+            "clicked": 2
+          }
+        },
+        "topClients": [
+          {
+            "name": "Gmail",
+            "count": 8,
+            "percentage": 80.0,
+            "deviceType": "desktop"
+          }
+        ],
+        "data": [
+          {
+            "period": "2026-10-14",
+            "sent": 20,
+            "delivered": 18,
+            "bounced": 2,
+            "failed": 0,
+            "opened": 10,
+            "clicked": 4,
+            "transactional": 10,
+            "broadcast": 10
+          }
+        ]
+      }
+    },
+    "templates.create": {
+      "status": 201,
+      "body": {
+        "id": "7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d",
+        "organisationId": "8d9e3f2b-8c1e-4a7d-8e5f-4f5a601c2d3e",
+        "name": "Boas-vindas",
+        "alias": null,
+        "subject": "Bem-vindo",
+        "preheader": null,
+        "html": "<h1>Olá {{nome}}</h1>",
+        "contentJson": null,
+        "textPayload": null,
+        "variables": [
+          {
+            "name": "nome",
+            "type": "string",
+            "fallbackValue": "cliente"
+          }
+        ],
+        "isActive": true,
+        "format": "html",
+        "sourceLocale": "pt-BR",
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "updatedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "templates.list": {
+      "status": 200,
+      "body": {
+        "data": [
+          {
+            "id": "7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d",
+            "organisationId": "8d9e3f2b-8c1e-4a7d-8e5f-4f5a601c2d3e",
+            "name": "Boas-vindas",
+            "alias": null,
+            "subject": "Bem-vindo",
+            "preheader": null,
+            "html": "<h1>Olá {{nome}}</h1>",
+            "contentJson": null,
+            "textPayload": null,
+            "variables": [
+              {
+                "name": "nome",
+                "type": "string",
+                "fallbackValue": "cliente"
+              }
+            ],
+            "isActive": true,
+            "format": "html",
+            "sourceLocale": "pt-BR",
+            "createdAt": "2026-10-14T12:00:00.000Z",
+            "updatedAt": "2026-10-14T12:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "templates.get": {
+      "status": 200,
+      "body": {
+        "id": "7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d",
+        "organisationId": "8d9e3f2b-8c1e-4a7d-8e5f-4f5a601c2d3e",
+        "name": "Boas-vindas",
+        "alias": null,
+        "subject": "Bem-vindo",
+        "preheader": null,
+        "html": "<h1>Olá {{nome}}</h1>",
+        "contentJson": null,
+        "textPayload": null,
+        "variables": [
+          {
+            "name": "nome",
+            "type": "string",
+            "fallbackValue": "cliente"
+          }
+        ],
+        "isActive": true,
+        "format": "html",
+        "sourceLocale": "pt-BR",
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "updatedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "templates.update": {
+      "status": 200,
+      "body": {
+        "id": "7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d",
+        "organisationId": "8d9e3f2b-8c1e-4a7d-8e5f-4f5a601c2d3e",
+        "name": "Boas-vindas",
+        "alias": null,
+        "subject": "Bem-vindo",
+        "preheader": null,
+        "html": "<h1>Olá {{nome}}</h1>",
+        "contentJson": null,
+        "textPayload": null,
+        "variables": [
+          {
+            "name": "nome",
+            "type": "string",
+            "fallbackValue": "cliente"
+          }
+        ],
+        "isActive": true,
+        "format": "html",
+        "sourceLocale": "pt-BR",
+        "createdAt": "2026-10-14T12:00:00.000Z",
+        "updatedAt": "2026-10-14T12:00:00.000Z"
+      }
+    },
+    "templates.delete": {
+      "status": 204,
+      "body": null
+    },
+    "templates.preview": {
+      "status": 200,
+      "body": {
+        "html": "<h1>Olá Ana</h1>",
+        "text": "Olá Ana"
+      }
+    },
+    "templates.format": {
+      "status": 200,
+      "body": {
+        "html": "<h1>Olá</h1>\n"
+      }
+    },
+    "templates.testRender": {
+      "status": 200,
+      "body": {
+        "html": "<h1>Olá Ana</h1>",
+        "text": "Olá Ana",
+        "sanitizeReport": {
+          "scripts": 1,
+          "iframes": 0,
+          "javascriptHrefs": 0,
+          "eventHandlers": 2
+        }
+      }
+    },
+    "templates.testSend": {
+      "status": 200,
+      "body": {
+        "success": true,
+        "messageId": "<msg@coffeemail>",
+        "recipient": "teste@loja.com.br"
+      }
+    },
+    "client.introspect": {
+      "status": 200,
+      "body": {
+        "id": "8c1e3f2b-4d7a-4f5e-8a6b-2d3e4f5a601c",
+        "name": "Produção",
+        "organisationId": "8d9e3f2b-8c1e-4a7d-8e5f-4f5a601c2d3e",
+        "scopes": [
+          "full_access"
+        ]
+      }
+    }
+  }
+}
