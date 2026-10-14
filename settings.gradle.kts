@@ -10,3 +10,5 @@ plugins {
 }
 
 rootProject.name = "coffeemail-java"
+
+include("examples")
