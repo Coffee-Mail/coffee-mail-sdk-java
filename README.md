@@ -41,7 +41,7 @@
 - **Nenhuma chamada de API lança exceção**: o resultado vem em `CoffeeMailResponse<T>` (sucesso ou falha, nunca os dois). `unwrap()` existe para quem prefere exceções.
 - **Tipado**: modelos são `record`s imutáveis; enums de resposta têm o valor `UNKNOWN` para tolerar valores novos da API; builders recebem os campos obrigatórios no construtor (`SendEmailInput.builder(from, to)`).
 - **Nulidade explícita**: todos os pacotes são `@NullMarked` ([JSpecify](https://jspecify.dev)) e o build verifica com NullAway. Campos opcionais são `Optional<T>`.
-- **Validado contra o contrato da API**: as 61 operações cobertas geram requisições validadas contra o OpenAPI de produto (`spec/product.json`) em `ContractConformanceTest`.
+- **Validado contra o contrato da API**: as 65 operações cobertas geram requisições validadas contra o OpenAPI de produto (`spec/product.json`) em `ContractConformanceTest`.
 - **Dependências mínimas**: `java.net.http.HttpClient` do JDK e Jackson 2.x; o transporte HTTP é plugável (`HttpTransport`).
 - **JPMS**: módulo `br.com.coffeemail`, testado em module path e em classpath.
 
@@ -50,7 +50,7 @@
 | Item | Estado |
 | --- | --- |
 | Versão publicada | `0.1.0` no Maven Central (2026-10-14) |
-| Cobertura da API de produto | 61 operações (todas as do `product.json`, exceto `GET /v1/product/auth/csrf`, exclusiva do dashboard) |
+| Cobertura da API de produto | 65 operações (todas as do `product.json`, exceto `GET /v1/product/auth/csrf`, exclusiva do dashboard) |
 | Compatibilidade de API pública | Verificada no `check` contra a `0.1.0` (ver [Versionamento](#-versionamento-e-releases)) |
 | Idiomas das mensagens de erro | `pt-BR` (padrão) e `en` |
 
@@ -60,7 +60,6 @@ Limitações conhecidas:
 - **Sem retry automático**: `429` e `5xx` voltam como `RateLimitException`/`InternalServerException`. O `Retry-After` é exposto em `RateLimitException.retryAfterSeconds()`; a política de nova tentativa fica com quem chama.
 - **`emails().sendBatch(...)` usa um único conjunto de cabeçalhos** para o lote: se vários itens definirem `idempotencyKey`, vale a do último; `sandbox(true)` em qualquer item ativa o sandbox para o lote inteiro.
 - **`templates().previewById(...)`** não é um endpoint próprio: faz `GET /templates/{id}` e depois `POST /templates/preview` com o HTML do template (duas requisições).
-- **Campanhas agendadas**: `CreateBroadcastInput` não aceita agendamento, porque a API ainda não aceita.
 - **Lacunas do `product.json`**: 18 respostas não têm schema ou declaram status diferente do que a API devolve (ex.: exclusões que respondem `204`), e `domains.delete` exige no spec uma credencial de reautenticação que a API dispensa para chaves de API. O teste de contrato lista essas lacunas explicitamente e falha quando o spec for corrigido, para que a lista seja removida.
 - **Origem do spec**: `spec/product.json` é um snapshot do spec OpenAPI público da API de produto (`https://api.coffeemail.com.br/v1/product/docs/json`), atualizado com `./gradlew syncOpenApi`.
 
@@ -300,11 +299,24 @@ coffeemail.emails().list(ListEmailsQuery.builder().status(EmailStatus.BOUNCED).l
 | `delete(String id)` | `DeleteDomainResponse` | `DELETE /domains/{id}` |
 | `getHealth(String id)` | `DomainHealthResponse` | `POST /domains/{id}/health` |
 | `getWarmupStatus(String id)` | `Optional<DomainWarmupStatus>` | `GET /domains/{id}/warmup` |
+| `rotateDkim(String id)` | `DkimRotation` | `POST /domains/{id}/dkim/rotate` |
+| `setTrackingDomain(String id, String host)` | `CustomHostStatus` | `PUT /domains/{id}/tracking-domain` |
+| `removeTrackingDomain(String id)` | `Optional<CustomHostStatus>` | `DELETE /domains/{id}/tracking-domain` |
+
+`DomainDetail` traz `dkimRotation()` (rotação pendente), `returnPath()` (return-path próprio, `bounces.<domínio>`), `trackingDomain()` (host de tracking próprio) e `trackingDomainsAvailable()` (se a plataforma permite cadastrar host de tracking). `CustomHostStatus` informa `host`, `target` (alvo do CNAME), `verified`, `verifiedAt` e o `record` a publicar. `DomainWarmupStatus` traz a fase (`status()`: `WARMING` ou `COMPLETED`), `totalDays()`, `startedAt()` e `completedAt()`.
+
+`rotateDkim` é idempotente: com uma rotação pendente, devolve a mesma. A chave em uso só muda quando o TXT do novo seletor aparece no DNS. Falha com `NotFoundException` (`apiCode()` `DOMAIN_NOT_FOUND`) ou `ConflictException` (`DOMAIN_NOT_VERIFIED`). `setTrackingDomain` falha com `ValidationException` (`INVALID_TRACKING_HOST`, host fora do domínio de envio), `ConflictException` (`TRACKING_DOMAINS_DISABLED`) ou `NotFoundException`.
 
 ```java
 coffeemail.domains().create("loja.com.br").data().ifPresent(domain ->
         domain.dkimRecordsToPublish().forEach(record ->
                 System.out.println(record.type() + " " + record.host() + " " + record.value())));
+
+coffeemail.domains().rotateDkim(domainId).data().ifPresent(rotation ->
+        System.out.println("Publique " + rotation.record().host() + " TXT " + rotation.record().value()));
+
+coffeemail.domains().setTrackingDomain(domainId, "links.loja.com.br").data().ifPresent(tracking ->
+        System.out.println(tracking.record().host() + " CNAME " + tracking.target()));
 ```
 
 ### Templates — `coffeemail.templates()`
