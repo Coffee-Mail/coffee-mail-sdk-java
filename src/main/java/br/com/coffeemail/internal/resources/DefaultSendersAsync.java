@@ -42,6 +42,12 @@ public final class DefaultSendersAsync implements SendersAsync {
     }
 
     @Override
+    public CompletableFuture<CoffeeMailResponse<NoContent>> resendVerification(final String id) {
+        return executor.executeAsync(
+                Operation.post(UrlBuilder.expand(ApiRoutes.SENDER_RESEND_VERIFICATION, id), ResponseType.noContent()));
+    }
+
+    @Override
     public CompletableFuture<CoffeeMailResponse<NoContent>> delete(final String id) {
         return executor.executeAsync(
                 Operation.delete(UrlBuilder.expand(ApiRoutes.SENDER, id), ResponseType.noContent()));

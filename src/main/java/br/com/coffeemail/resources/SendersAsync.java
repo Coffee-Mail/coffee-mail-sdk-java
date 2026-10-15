@@ -35,6 +35,14 @@ public interface SendersAsync {
     CompletableFuture<CoffeeMailResponse<VerifySenderResult>> verify(String token);
 
     /**
+     * Reenvia o e-mail de verificação com um token novo (o anterior expira).
+     *
+     * @param id identificador do remetente
+     * @return {@link NoContent} em caso de sucesso
+     */
+    CompletableFuture<CoffeeMailResponse<NoContent>> resendVerification(String id);
+
+    /**
      * Remove um remetente.
      *
      * @param id identificador do remetente

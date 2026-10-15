@@ -47,6 +47,7 @@ public final class ApiRoutes {
     public static final String SENDERS = PRODUCT + "/senders";
     public static final String SENDERS_VERIFY = SENDERS + VERIFY;
     public static final String SENDER = SENDERS + ID;
+    public static final String SENDER_RESEND_VERIFICATION = SENDER + "/resend-verification";
 
     public static final String SUPPRESSIONS = PRODUCT + "/suppressions";
     public static final String SUPPRESSIONS_BULK = SUPPRESSIONS + BULK;

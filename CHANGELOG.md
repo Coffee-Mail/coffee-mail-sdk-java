@@ -4,6 +4,19 @@ Todas as mudanças relevantes deste projeto são documentadas aqui. O formato se
 
 ## [Não lançado]
 
+### Adicionado
+
+- `CreateBroadcastInput.Builder.scheduledAt(Instant)` agenda a campanha (ela nasce `scheduled`).
+- `BroadcastDetail.metrics()` (`Optional<BroadcastMetrics>`) com entregues, abertos, cliques, bounces, falhas e suprimidos.
+- `Senders.resendVerification(String)` e `SendersAsync.resendVerification(String)` reenviam o e-mail de verificação com token novo.
+- `ContactDetail.subscribed()` e `ContactDetail.isSubscribed()` (`false` quando o contato se descadastrou).
+- Os construtores anteriores de `BroadcastDetail` e `ContactDetail` continuam disponíveis (compatibilidade binária verificada pelo `verifyApiCompatibility`).
+
+### Alterado
+
+- `SenderDetail.verificationToken()` vem sempre vazio em `senders().create()`: a API não devolve mais o token, que segue por e-mail ao endereço cadastrado.
+- `broadcasts().send()` responde assim que o envio é enfileirado (`SENDING`); o progresso acompanha-se por `broadcasts().get()`.
+
 ### Removido
 
 - `CoffeeMailBuilder.baseUrl(String)` e `baseUrl(URI)`. O SDK fala só com `https://api.coffeemail.com.br`, para que a chave de API nunca seja enviada a outro host. É uma quebra de compatibilidade intencional, excluída do `verifyApiCompatibility`.

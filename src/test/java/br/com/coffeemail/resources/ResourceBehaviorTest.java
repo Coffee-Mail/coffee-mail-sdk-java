@@ -5,10 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import br.com.coffeemail.CoffeeMail;
 import br.com.coffeemail.CoffeeMailLocale;
 import br.com.coffeemail.CoffeeMailResponse;
+import br.com.coffeemail.errors.ConflictException;
 import br.com.coffeemail.errors.NotFoundException;
 import br.com.coffeemail.errors.PermissionException;
 import br.com.coffeemail.internal.result.TryCatch;
 import br.com.coffeemail.models.audiences.AudienceDetail;
+import br.com.coffeemail.models.audiences.ContactDetail;
+import br.com.coffeemail.models.audiences.ListContactsResponse;
+import br.com.coffeemail.models.broadcasts.BroadcastDetail;
 import br.com.coffeemail.models.broadcasts.CreateBroadcastInput;
 import br.com.coffeemail.models.domains.CreateDomainResponse;
 import br.com.coffeemail.models.domains.DomainWarmupStatus;
@@ -29,6 +33,7 @@ import br.com.coffeemail.transport.HttpResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -385,5 +390,63 @@ final class ResourceBehaviorTest {
                 client(FakeTransport.replying(200, "null")).domains().getWarmupStatus("d");
 
         assertThat(response.unwrap()).isEmpty();
+    }
+
+    @Test
+    void F2_resendVerificationPostsToTheResendRoute() {
+        final FakeTransport transport = FakeTransport.replying(204, "");
+
+        final var response = client(transport).senders().resendVerification("s_1");
+
+        assertThat(response.isSuccess()).isTrue();
+        assertThat(transport.lastRequest().method().name()).isEqualTo("POST");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/senders/s_1/resend-verification");
+    }
+
+    @Test
+    void F2_resendVerificationMapsConflictAndNotFound() {
+        final var conflict = client(FakeTransport.replying(
+                        409, "{\"error\":{\"code\":\"CONFLICT\",\"message\":\"sender is already verified\"}}"))
+                .senders()
+                .resendVerification("s_1");
+        final var missing = client(FakeTransport.replying(404, "{\"error\":{\"code\":\"NOT_FOUND\"}}"))
+                .senders()
+                .resendVerification("s_x");
+
+        assertThat(conflict.error()).containsInstanceOf(ConflictException.class);
+        assertThat(missing.error()).containsInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void F2_createBroadcastSendsScheduledAtAndGetDecodesMetrics() {
+        final FakeTransport transport = FakeTransport.replying(201, Fixtures.body("broadcasts.create"));
+        final Instant at = Instant.parse("2030-01-01T10:00:00Z");
+
+        client(transport)
+                .broadcasts()
+                .create(CreateBroadcastInput.fromTemplate("a1", "news@loja.com.br", "tpl_1")
+                        .scheduledAt(at)
+                        .build());
+        assertThat(body(transport.lastRequest()).path("scheduledAt").asText()).isEqualTo("2030-01-01T10:00:00Z");
+
+        final BroadcastDetail detail = client(FakeTransport.replying(200, Fixtures.body("broadcasts.get")))
+                .broadcasts()
+                .get("b1")
+                .unwrap();
+        assertThat(detail.metrics()).isPresent();
+    }
+
+    @Test
+    void F2_contactsExposeSubscriptionAndOldConstructorDefaultsToSubscribed() {
+        final ListContactsResponse page = client(FakeTransport.replying(200, Fixtures.body("contacts.list")))
+                .audiences()
+                .contacts()
+                .list("aud_1")
+                .unwrap();
+
+        assertThat(page.contacts().get(0).isSubscribed()).isTrue();
+        assertThat(new ContactDetail("c1", "a@b.com", Optional.empty(), Optional.empty(), Map.of(), Instant.EPOCH)
+                        .isSubscribed())
+                .isTrue();
     }
 }

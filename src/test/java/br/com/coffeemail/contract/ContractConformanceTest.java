@@ -82,13 +82,14 @@ final class ContractConformanceTest {
     private static final String PLACEHOLDER = "\\{[^}]+}";
     private static final String NO_RESPONSE_SCHEMA = "operação sem schema de resposta no product.json";
     private static final String DELETE_RETURNS_204 = "a API responde 204, mas o product.json declara outro status";
+    private static final String NO_CONTENT_DECLARES_BODY =
+            "a API responde 204 sem corpo, mas o product.json declara um corpo nulo";
     private static final Map<String, String> RESPONSE_SPEC_GAPS = Map.ofEntries(
             Map.entry("client.introspect", NO_RESPONSE_SCHEMA),
             Map.entry("audiences.list", NO_RESPONSE_SCHEMA),
             Map.entry("audiences.get", NO_RESPONSE_SCHEMA),
             Map.entry("audiences.update", NO_RESPONSE_SCHEMA),
             Map.entry("contacts.update", NO_RESPONSE_SCHEMA),
-            Map.entry("broadcasts.get", NO_RESPONSE_SCHEMA),
             Map.entry("broadcasts.send", NO_RESPONSE_SCHEMA),
             Map.entry("webhooks.toggle", NO_RESPONSE_SCHEMA),
             Map.entry("webhooks.rotateSecret", NO_RESPONSE_SCHEMA),
@@ -98,6 +99,7 @@ final class ContractConformanceTest {
             Map.entry("audiences.delete", DELETE_RETURNS_204),
             Map.entry("contacts.delete", DELETE_RETURNS_204),
             Map.entry("senders.delete", DELETE_RETURNS_204),
+            Map.entry("senders.resendVerification", NO_CONTENT_DECLARES_BODY),
             Map.entry("suppressions.delete", DELETE_RETURNS_204),
             Map.entry("suppressions.reactivate", DELETE_RETURNS_204),
             Map.entry("webhooks.delete", DELETE_RETURNS_204));
@@ -454,6 +456,10 @@ final class ContractConformanceTest {
                         "senders.verify",
                         "POST /v1/product/senders/verify",
                         client -> client.senders().verify(id("token"))),
+                c(
+                        "senders.resendVerification",
+                        "POST /v1/product/senders/{id}/resend-verification",
+                        client -> client.senders().resendVerification(id("sender"))),
                 c(
                         "senders.delete",
                         "DELETE /v1/product/senders/{id}",

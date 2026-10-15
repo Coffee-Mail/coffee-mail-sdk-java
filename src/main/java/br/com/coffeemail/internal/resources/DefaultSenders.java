@@ -33,6 +33,11 @@ public final class DefaultSenders implements Senders {
     }
 
     @Override
+    public CoffeeMailResponse<NoContent> resendVerification(final String id) {
+        return async.resendVerification(id).join();
+    }
+
+    @Override
     public CoffeeMailResponse<NoContent> delete(final String id) {
         return async.delete(id).join();
     }
