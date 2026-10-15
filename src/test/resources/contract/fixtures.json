@@ -340,7 +340,44 @@
             "value": "v=DKIM1; k=rsa; p=MIIB",
             "ttl": 3600
           }
-        ]
+        ],
+        "dkimRotation": {
+          "domainId": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+          "selector": "cm2",
+          "startedAt": "2026-10-14T12:00:00.000Z",
+          "record": {
+            "type": "TXT",
+            "host": "cm2._domainkey",
+            "value": "v=DKIM1; k=rsa; p=MIIC",
+            "ttl": 3600
+          }
+        },
+        "returnPath": {
+          "host": "bounces.loja.com.br",
+          "target": "bounces.coffeemail.com.br",
+          "verified": true,
+          "verifiedAt": "2026-10-14T12:00:00.000Z",
+          "record": {
+            "type": "CNAME",
+            "host": "bounces",
+            "value": "bounces.coffeemail.com.br",
+            "ttl": 3600,
+            "isInfrastructure": false
+          }
+        },
+        "trackingDomain": {
+          "host": "links.loja.com.br",
+          "target": "track.coffeemail.com.br",
+          "verified": false,
+          "verifiedAt": null,
+          "record": {
+            "type": "CNAME",
+            "host": "links",
+            "value": "track.coffeemail.com.br",
+            "ttl": 3600
+          }
+        },
+        "trackingDomainsAvailable": true
       }
     },
     "domains.delete": {
@@ -440,7 +477,55 @@
         "sentToday": 120,
         "remainingToday": 380,
         "quotaUsedPercent": 24,
-        "lastSendDate": "2026-10-14"
+        "lastSendDate": "2026-10-14",
+        "status": "warming",
+        "totalDays": 30,
+        "startedAt": "2026-10-14T12:00:00.000Z",
+        "completedAt": null
+      }
+    },
+    "domains.rotateDkim": {
+      "status": 200,
+      "body": {
+        "domainId": "5a603f2b-8c1e-4a7d-9e5f-1c2d3e4f5a6b",
+        "selector": "cm2",
+        "startedAt": "2026-10-14T12:00:00.000Z",
+        "record": {
+          "type": "TXT",
+          "host": "cm2._domainkey",
+          "value": "v=DKIM1; k=rsa; p=MIIC",
+          "ttl": 3600
+        }
+      }
+    },
+    "domains.setTrackingDomain": {
+      "status": 200,
+      "body": {
+        "host": "links.loja.com.br",
+        "target": "track.coffeemail.com.br",
+        "verified": false,
+        "verifiedAt": null,
+        "record": {
+          "type": "CNAME",
+          "host": "links",
+          "value": "track.coffeemail.com.br",
+          "ttl": 3600
+        }
+      }
+    },
+    "domains.removeTrackingDomain": {
+      "status": 200,
+      "body": {
+        "host": "links.loja.com.br",
+        "target": "track.coffeemail.com.br",
+        "verified": false,
+        "verifiedAt": null,
+        "record": {
+          "type": "CNAME",
+          "host": "links",
+          "value": "track.coffeemail.com.br",
+          "ttl": 3600
+        }
       }
     },
     "suppressions.create": {

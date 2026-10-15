@@ -11,6 +11,11 @@ Todas as mudanças relevantes deste projeto são documentadas aqui. O formato se
 - `Senders.resendVerification(String)` e `SendersAsync.resendVerification(String)` reenviam o e-mail de verificação com token novo.
 - `ContactDetail.subscribed()` e `ContactDetail.isSubscribed()` (`false` quando o contato se descadastrou).
 - Os construtores anteriores de `BroadcastDetail` e `ContactDetail` continuam disponíveis (compatibilidade binária verificada pelo `verifyApiCompatibility`).
+- `Domains.rotateDkim(String)` (e `DomainsAsync`) inicia a rotação da chave DKIM e devolve `DkimRotation` (`domainId`, `selector`, `startedAt`, `record`). Idempotente; erros `DOMAIN_NOT_FOUND` (404) e `DOMAIN_NOT_VERIFIED` (409) em `apiCode()`.
+- `Domains.setTrackingDomain(String, String)` e `Domains.removeTrackingDomain(String)` (e `DomainsAsync`) cadastram e removem o host de tracking próprio, com `CustomHostStatus` (`host`, `target`, `verified`, `verifiedAt`, `record`). Erros `INVALID_TRACKING_HOST` (400), `TRACKING_DOMAINS_DISABLED` (409) e 404 em `apiCode()`.
+- `DomainDetail.dkimRotation()`, `returnPath()`, `trackingDomain()` e `trackingDomainsAvailable()`.
+- `DomainWarmupStatus.status()` (`DomainWarmupState`: `WARMING`, `COMPLETED`), `totalDays()`, `startedAt()` e `completedAt()`.
+- Os construtores anteriores de `DomainDetail` e `DomainWarmupStatus` continuam disponíveis (compatibilidade binária verificada pelo `verifyApiCompatibility`).
 
 ### Alterado
 

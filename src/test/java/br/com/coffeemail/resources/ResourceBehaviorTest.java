@@ -8,6 +8,7 @@ import br.com.coffeemail.CoffeeMailResponse;
 import br.com.coffeemail.errors.ConflictException;
 import br.com.coffeemail.errors.NotFoundException;
 import br.com.coffeemail.errors.PermissionException;
+import br.com.coffeemail.errors.ValidationException;
 import br.com.coffeemail.internal.result.TryCatch;
 import br.com.coffeemail.models.audiences.AudienceDetail;
 import br.com.coffeemail.models.audiences.ContactDetail;
@@ -15,6 +16,12 @@ import br.com.coffeemail.models.audiences.ListContactsResponse;
 import br.com.coffeemail.models.broadcasts.BroadcastDetail;
 import br.com.coffeemail.models.broadcasts.CreateBroadcastInput;
 import br.com.coffeemail.models.domains.CreateDomainResponse;
+import br.com.coffeemail.models.domains.CustomHostStatus;
+import br.com.coffeemail.models.domains.DkimRotation;
+import br.com.coffeemail.models.domains.DnsRecordType;
+import br.com.coffeemail.models.domains.DomainDetail;
+import br.com.coffeemail.models.domains.DomainStatus;
+import br.com.coffeemail.models.domains.DomainWarmupState;
 import br.com.coffeemail.models.domains.DomainWarmupStatus;
 import br.com.coffeemail.models.emails.AttachmentDisposition;
 import br.com.coffeemail.models.emails.EmailAddress;
@@ -32,6 +39,7 @@ import br.com.coffeemail.transport.HttpRequest;
 import br.com.coffeemail.transport.HttpResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
@@ -448,5 +456,184 @@ final class ResourceBehaviorTest {
         assertThat(new ContactDetail("c1", "a@b.com", Optional.empty(), Optional.empty(), Map.of(), Instant.EPOCH)
                         .isSubscribed())
                 .isTrue();
+    }
+
+    @Test
+    void F4_rotateDkimPostsWithoutBodyAndDecodesThePendingRotation() {
+        final FakeTransport transport = FakeTransport.replying(200, Fixtures.body("domains.rotateDkim"));
+
+        final DkimRotation rotation =
+                client(transport).domains().rotateDkim("d_1").unwrap();
+
+        assertThat(transport.lastRequest().method().name()).isEqualTo("POST");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/domains/d_1/dkim/rotate");
+        assertThat(transport.lastRequest().body()).isEmpty();
+        assertThat(rotation.selector()).isEqualTo("cm2");
+        assertThat(rotation.startedAt()).isEqualTo(Instant.parse("2026-10-14T12:00:00Z"));
+        assertThat(rotation.record().type()).isEqualTo(DnsRecordType.TXT);
+        assertThat(rotation.record().host()).isEqualTo("cm2._domainkey");
+    }
+
+    @Test
+    void F4_rotateDkimMapsDomainNotFoundAndNotVerified() {
+        final var missing = client(FakeTransport.replying(404, "{\"error\":{\"code\":\"DOMAIN_NOT_FOUND\"}}"))
+                .domains()
+                .rotateDkim("d_x");
+        final var unverified = client(FakeTransport.replying(
+                        409, "{\"error\":{\"code\":\"DOMAIN_NOT_VERIFIED\",\"message\":\"verifique antes\"}}"))
+                .domains()
+                .rotateDkim("d_1");
+
+        assertThat(missing.error()).containsInstanceOf(NotFoundException.class);
+        assertThat(missing.error().flatMap(error -> error.apiCode())).contains("DOMAIN_NOT_FOUND");
+        assertThat(unverified.error()).containsInstanceOf(ConflictException.class);
+        assertThat(unverified.error().flatMap(error -> error.apiCode())).contains("DOMAIN_NOT_VERIFIED");
+    }
+
+    @Test
+    void F4_setTrackingDomainPutsTheHostAndDecodesTheCnameStatus() {
+        final FakeTransport transport = FakeTransport.replying(200, Fixtures.body("domains.setTrackingDomain"));
+
+        final CustomHostStatus status = client(transport)
+                .domains()
+                .setTrackingDomain("d_1", "links.loja.com.br")
+                .unwrap();
+
+        assertThat(transport.lastRequest().method().name()).isEqualTo("PUT");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/domains/d_1/tracking-domain");
+        assertThat(body(transport.lastRequest()))
+                .isEqualTo(MAPPER.createObjectNode().put("host", "links.loja.com.br"));
+        assertThat(status.host()).isEqualTo("links.loja.com.br");
+        assertThat(status.target()).isEqualTo("track.coffeemail.com.br");
+        assertThat(status.verified()).isFalse();
+        assertThat(status.verifiedAt()).isEmpty();
+        assertThat(status.record().type()).isEqualTo(DnsRecordType.CNAME);
+    }
+
+    @Test
+    void F4_setTrackingDomainMapsInvalidHostDisabledFeatureAndNotFound() {
+        final var invalid = client(FakeTransport.replying(400, "{\"error\":{\"code\":\"INVALID_TRACKING_HOST\"}}"))
+                .domains()
+                .setTrackingDomain("d_1", "links.outro.com");
+        final var disabled = client(FakeTransport.replying(409, "{\"error\":{\"code\":\"TRACKING_DOMAINS_DISABLED\"}}"))
+                .domains()
+                .setTrackingDomain("d_1", "links.loja.com.br");
+        final var missing = client(FakeTransport.replying(404, "{\"error\":{\"code\":\"DOMAIN_NOT_FOUND\"}}"))
+                .domains()
+                .setTrackingDomain("d_x", "links.loja.com.br");
+
+        assertThat(invalid.error()).containsInstanceOf(ValidationException.class);
+        assertThat(invalid.error().flatMap(error -> error.apiCode())).contains("INVALID_TRACKING_HOST");
+        assertThat(disabled.error()).containsInstanceOf(ConflictException.class);
+        assertThat(disabled.error().flatMap(error -> error.apiCode())).contains("TRACKING_DOMAINS_DISABLED");
+        assertThat(missing.error()).containsInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void F4_removeTrackingDomainDeletesAndReturnsTheRemovedHostOrEmpty() {
+        final FakeTransport transport = FakeTransport.replying(200, Fixtures.body("domains.removeTrackingDomain"));
+
+        final Optional<CustomHostStatus> removed =
+                client(transport).domains().removeTrackingDomain("d_1").unwrap();
+        final Optional<CustomHostStatus> none = client(FakeTransport.replying(200, "null"))
+                .domains()
+                .removeTrackingDomain("d_1")
+                .unwrap();
+        final var missing = client(FakeTransport.replying(404, "{\"error\":{\"code\":\"DOMAIN_NOT_FOUND\"}}"))
+                .domains()
+                .removeTrackingDomain("d_x");
+
+        assertThat(transport.lastRequest().method().name()).isEqualTo("DELETE");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/domains/d_1/tracking-domain");
+        assertThat(removed.map(CustomHostStatus::host)).contains("links.loja.com.br");
+        assertThat(none).isEmpty();
+        assertThat(missing.error()).containsInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void F4_domainDetailDecodesRotationReturnPathAndTracking() {
+        final DomainDetail detail = client(FakeTransport.replying(200, Fixtures.body("domains.get")))
+                .domains()
+                .get("d_1")
+                .unwrap();
+
+        assertThat(detail.dkimRotation().map(DkimRotation::selector)).contains("cm2");
+        assertThat(detail.returnPath().map(CustomHostStatus::verified)).contains(true);
+        assertThat(detail.returnPath().flatMap(CustomHostStatus::verifiedAt))
+                .contains(Instant.parse("2026-10-14T12:00:00Z"));
+        assertThat(detail.trackingDomain().map(CustomHostStatus::host)).contains("links.loja.com.br");
+        assertThat(detail.trackingDomainsAvailable()).contains(true);
+    }
+
+    @Test
+    void F4_domainDetailWithoutTheNewFieldsAndTheOldConstructorLeaveThemEmpty() {
+        final ObjectNode legacy = (ObjectNode) parse(Fixtures.body("domains.get"));
+        legacy.remove(List.of("dkimRotation", "returnPath", "trackingDomain", "trackingDomainsAvailable"));
+
+        final DomainDetail detail = client(FakeTransport.replying(200, legacy.toString()))
+                .domains()
+                .get("d_1")
+                .unwrap();
+
+        assertThat(detail.dkimRotation()).isEmpty();
+        assertThat(detail.returnPath()).isEmpty();
+        assertThat(detail.trackingDomain()).isEmpty();
+        assertThat(detail.trackingDomainsAvailable()).isEmpty();
+        assertThat(new DomainDetail(
+                                "d_1",
+                                "loja.com.br",
+                                DomainStatus.VERIFIED,
+                                Optional.empty(),
+                                Optional.empty(),
+                                "cm1",
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Instant.EPOCH,
+                                List.of())
+                        .dkimRotation())
+                .isEmpty();
+    }
+
+    @Test
+    void F4_warmupDecodesPhaseDurationAndDates() {
+        final DomainWarmupStatus warmup = client(FakeTransport.replying(200, Fixtures.body("domains.getWarmupStatus")))
+                .domains()
+                .getWarmupStatus("d_1")
+                .unwrap()
+                .orElseThrow();
+        final DomainWarmupStatus completed = client(FakeTransport.replying(
+                        200,
+                        Fixtures.body("domains.getWarmupStatus")
+                                .replace("\"warming\"", "\"completed\"")
+                                .replace("\"completedAt\":null", "\"completedAt\":\"2026-11-13T12:00:00.000Z\"")))
+                .domains()
+                .getWarmupStatus("d_1")
+                .unwrap()
+                .orElseThrow();
+
+        assertThat(warmup.status()).contains(DomainWarmupState.WARMING);
+        assertThat(warmup.totalDays()).contains(30);
+        assertThat(warmup.startedAt()).contains(Instant.parse("2026-10-14T12:00:00Z"));
+        assertThat(warmup.completedAt()).isEmpty();
+        assertThat(completed.status()).contains(DomainWarmupState.COMPLETED);
+        assertThat(completed.completedAt()).contains(Instant.parse("2026-11-13T12:00:00Z"));
+    }
+
+    @Test
+    void F4_warmupToleratesUnknownPhaseAndKeepsTheOldConstructor() {
+        final DomainWarmupStatus unknown = client(FakeTransport.replying(
+                        200, Fixtures.body("domains.getWarmupStatus").replace("\"warming\"", "\"paused\"")))
+                .domains()
+                .getWarmupStatus("d_1")
+                .unwrap()
+                .orElseThrow();
+        final DomainWarmupStatus legacy = new DomainWarmupStatus("d_1", 1, 50, 0, 50, 0, Optional.empty());
+
+        assertThat(unknown.status()).contains(DomainWarmupState.UNKNOWN);
+        assertThat(legacy.status()).isEmpty();
+        assertThat(legacy.totalDays()).isEmpty();
+        assertThat(legacy.startedAt()).isEmpty();
+        assertThat(legacy.completedAt()).isEmpty();
     }
 }

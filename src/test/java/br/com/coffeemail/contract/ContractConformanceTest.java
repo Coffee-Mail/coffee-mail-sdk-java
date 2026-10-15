@@ -229,7 +229,19 @@ final class ContractConformanceTest {
                 c(
                         "domains.getWarmupStatus",
                         "GET /v1/product/domains/{id}/warmup",
-                        client -> client.domains().getWarmupStatus(id("domain"))));
+                        client -> client.domains().getWarmupStatus(id("domain"))),
+                c(
+                        "domains.rotateDkim",
+                        "POST /v1/product/domains/{id}/dkim/rotate",
+                        client -> client.domains().rotateDkim(id("domain"))),
+                c(
+                        "domains.setTrackingDomain",
+                        "PUT /v1/product/domains/{id}/tracking-domain",
+                        client -> client.domains().setTrackingDomain(id("domain"), "links.loja.com.br")),
+                c(
+                        "domains.removeTrackingDomain",
+                        "DELETE /v1/product/domains/{id}/tracking-domain",
+                        client -> client.domains().removeTrackingDomain(id("domain"))));
     }
 
     private static Stream<ContractCase> templateCases() {

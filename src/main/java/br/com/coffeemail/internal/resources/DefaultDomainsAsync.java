@@ -8,8 +8,11 @@ import br.com.coffeemail.internal.http.RequestExecutor;
 import br.com.coffeemail.internal.http.UrlBuilder;
 import br.com.coffeemail.internal.json.ResponseType;
 import br.com.coffeemail.internal.wire.NamedBodies.CreateDomainBody;
+import br.com.coffeemail.internal.wire.NamedBodies.TrackingDomainBody;
 import br.com.coffeemail.models.domains.CreateDomainResponse;
+import br.com.coffeemail.models.domains.CustomHostStatus;
 import br.com.coffeemail.models.domains.DeleteDomainResponse;
+import br.com.coffeemail.models.domains.DkimRotation;
 import br.com.coffeemail.models.domains.DomainDetail;
 import br.com.coffeemail.models.domains.DomainHealthResponse;
 import br.com.coffeemail.models.domains.DomainWarmupStatus;
@@ -66,5 +69,27 @@ public final class DefaultDomainsAsync implements DomainsAsync {
     public CompletableFuture<CoffeeMailResponse<Optional<DomainWarmupStatus>>> getWarmupStatus(final String id) {
         return executor.executeAsync(Operation.get(
                 UrlBuilder.expand(ApiRoutes.DOMAIN_WARMUP, id), ResponseType.optionalOf(DomainWarmupStatus.class)));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<DkimRotation>> rotateDkim(final String id) {
+        return executor.executeAsync(Operation.post(
+                UrlBuilder.expand(ApiRoutes.DOMAIN_DKIM_ROTATE, id), ResponseType.of(DkimRotation.class)));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<CustomHostStatus>> setTrackingDomain(
+            final String id, final String host) {
+        return executor.executeAsync(Operation.put(
+                        UrlBuilder.expand(ApiRoutes.DOMAIN_TRACKING_DOMAIN, id),
+                        ResponseType.of(CustomHostStatus.class))
+                .withBody(new TrackingDomainBody(host)));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<Optional<CustomHostStatus>>> removeTrackingDomain(final String id) {
+        return executor.executeAsync(Operation.delete(
+                UrlBuilder.expand(ApiRoutes.DOMAIN_TRACKING_DOMAIN, id),
+                ResponseType.optionalOf(CustomHostStatus.class)));
     }
 }

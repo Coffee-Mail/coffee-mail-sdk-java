@@ -24,6 +24,8 @@ public final class ApiRoutes {
     public static final String DOMAIN_VERIFY = DOMAIN + VERIFY;
     public static final String DOMAIN_HEALTH = DOMAIN + "/health";
     public static final String DOMAIN_WARMUP = DOMAIN + "/warmup";
+    public static final String DOMAIN_DKIM_ROTATE = DOMAIN + "/dkim/rotate";
+    public static final String DOMAIN_TRACKING_DOMAIN = DOMAIN + "/tracking-domain";
 
     public static final String TEMPLATES = PRODUCT + "/templates";
     public static final String TEMPLATE = TEMPLATES + ID;

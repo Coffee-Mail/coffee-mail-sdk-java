@@ -11,6 +11,8 @@ public final class NamedBodies {
 
     public record CreateDomainBody(String name) {}
 
+    public record TrackingDomainBody(String host) {}
+
     public record VerifySenderBody(String token) {}
 
     public record ToggleWebhookBody(ToggleableWebhookStatus status) {}
