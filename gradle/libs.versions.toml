@@ -10,7 +10,7 @@ swaggerRequestValidator = "2.46.1"
 checkstyle = "14.3.0"
 jacoco = "0.8.15"
 palantirJavaFormat = "2.102.0"
-spring = "6.2.19"
+spring = "7.0.9"
 
 [libraries]
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
