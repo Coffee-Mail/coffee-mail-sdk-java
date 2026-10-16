@@ -20,6 +20,7 @@ import br.com.coffeemail.models.webhooks.TestWebhookResult;
 import br.com.coffeemail.models.webhooks.ToggleWebhookResult;
 import br.com.coffeemail.models.webhooks.ToggleableWebhookStatus;
 import br.com.coffeemail.models.webhooks.UpdateWebhookInput;
+import br.com.coffeemail.models.webhooks.WebhookDeliveryDetail;
 import br.com.coffeemail.models.webhooks.WebhookDetail;
 import br.com.coffeemail.resources.WebhooksAsync;
 import br.com.coffeemail.webhooks.VerifyWebhookInput;
@@ -109,6 +110,22 @@ public final class DefaultWebhooksAsync implements WebhooksAsync {
     public CompletableFuture<CoffeeMailResponse<TestWebhookResult>> test(final String id) {
         return executor.executeAsync(Operation.post(
                 UrlBuilder.expand(ApiRoutes.WEBHOOK_TEST, id), ResponseType.of(TestWebhookResult.class)));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<WebhookDeliveryDetail>> getDelivery(
+            final String id, final String deliveryId) {
+        return executor.executeAsync(Operation.get(
+                UrlBuilder.expand(ApiRoutes.WEBHOOK_DELIVERY, id, deliveryId),
+                ResponseType.of(WebhookDeliveryDetail.class)));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<WebhookDeliveryDetail>> replayDelivery(
+            final String id, final String deliveryId) {
+        return executor.executeAsync(Operation.post(
+                UrlBuilder.expand(ApiRoutes.WEBHOOK_DELIVERY_REPLAY, id, deliveryId),
+                ResponseType.of(WebhookDeliveryDetail.class)));
     }
 
     @Override

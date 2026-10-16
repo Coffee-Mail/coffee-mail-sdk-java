@@ -20,4 +20,6 @@ public final class NamedBodies {
     public record BulkContactsBody(List<CreateContactInput> contacts) {}
 
     public record BulkSuppressionsBody(List<BulkSuppressionEntry> suppressions) {}
+
+    public record ValidateEmailsBody(List<String> emails) {}
 }

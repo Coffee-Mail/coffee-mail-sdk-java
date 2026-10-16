@@ -13,6 +13,7 @@ import br.com.coffeemail.models.webhooks.TestWebhookResult;
 import br.com.coffeemail.models.webhooks.ToggleWebhookResult;
 import br.com.coffeemail.models.webhooks.ToggleableWebhookStatus;
 import br.com.coffeemail.models.webhooks.UpdateWebhookInput;
+import br.com.coffeemail.models.webhooks.WebhookDeliveryDetail;
 import br.com.coffeemail.models.webhooks.WebhookDetail;
 import br.com.coffeemail.webhooks.VerifyWebhookInput;
 import java.util.concurrent.CompletableFuture;
@@ -110,6 +111,27 @@ public interface WebhooksAsync {
      * @return a resposta do endpoint
      */
     CompletableFuture<CoffeeMailResponse<TestWebhookResult>> test(String id);
+
+    /**
+     * Busca uma entrega com o corpo enviado ao endpoint.
+     *
+     * @param id identificador do webhook
+     * @param deliveryId identificador da entrega
+     * @return a entrega; falha com {@code WEBHOOK_NOT_FOUND} ou {@code WEBHOOK_DELIVERY_NOT_FOUND} (404) em
+     *     {@link br.com.coffeemail.errors.CoffeeMailException#apiCode()}
+     */
+    CompletableFuture<CoffeeMailResponse<WebhookDeliveryDetail>> getDelivery(String id, String deliveryId);
+
+    /**
+     * Reenvia uma entrega concluída com o mesmo corpo. A API cria uma entrega nova e a enfileira (HTTP 202).
+     *
+     * @param id identificador do webhook
+     * @param deliveryId identificador da entrega original
+     * @return a entrega nova; falha com {@code WEBHOOK_NOT_FOUND} ou {@code WEBHOOK_DELIVERY_NOT_FOUND} (404),
+     *     {@code WEBHOOK_DELIVERY_PENDING} (409, a entrega ainda está em andamento) ou {@code WEBHOOK_NOT_ACTIVE}
+     *     (409, webhook pausado) em {@link br.com.coffeemail.errors.CoffeeMailException#apiCode()}
+     */
+    CompletableFuture<CoffeeMailResponse<WebhookDeliveryDetail>> replayDelivery(String id, String deliveryId);
 
     /**
      * Verifica a assinatura de uma entrega recebida. Equivale a {@link br.com.coffeemail.webhooks.WebhookVerifier#verify(VerifyWebhookInput)}.

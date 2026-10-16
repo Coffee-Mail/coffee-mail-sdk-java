@@ -3,11 +3,13 @@ package br.com.coffeemail.resources;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import br.com.coffeemail.CoffeeMail;
+import br.com.coffeemail.CoffeeMailAsync;
 import br.com.coffeemail.CoffeeMailLocale;
 import br.com.coffeemail.CoffeeMailResponse;
 import br.com.coffeemail.errors.ConflictException;
 import br.com.coffeemail.errors.NotFoundException;
 import br.com.coffeemail.errors.PermissionException;
+import br.com.coffeemail.errors.RateLimitException;
 import br.com.coffeemail.errors.ValidationException;
 import br.com.coffeemail.internal.result.TryCatch;
 import br.com.coffeemail.models.audiences.AudienceDetail;
@@ -15,6 +17,7 @@ import br.com.coffeemail.models.audiences.ContactDetail;
 import br.com.coffeemail.models.audiences.ListContactsResponse;
 import br.com.coffeemail.models.broadcasts.BroadcastDetail;
 import br.com.coffeemail.models.broadcasts.CreateBroadcastInput;
+import br.com.coffeemail.models.common.OffsetPaginationQuery;
 import br.com.coffeemail.models.domains.CreateDomainResponse;
 import br.com.coffeemail.models.domains.CustomHostStatus;
 import br.com.coffeemail.models.domains.DkimRotation;
@@ -30,9 +33,18 @@ import br.com.coffeemail.models.emails.EmailDetail;
 import br.com.coffeemail.models.emails.EmailStatus;
 import br.com.coffeemail.models.emails.EmailType;
 import br.com.coffeemail.models.emails.SendEmailInput;
+import br.com.coffeemail.models.templates.ListTemplateVersionsResponse;
 import br.com.coffeemail.models.templates.ListTemplatesResponse;
 import br.com.coffeemail.models.templates.PreviewTemplateResponse;
+import br.com.coffeemail.models.templates.TemplateDetail;
+import br.com.coffeemail.models.templates.TemplateFormat;
+import br.com.coffeemail.models.templates.TemplateVariable;
+import br.com.coffeemail.models.templates.TemplateVersionDetail;
+import br.com.coffeemail.models.templates.TemplateVersionSummary;
 import br.com.coffeemail.models.templates.UpdateTemplateInput;
+import br.com.coffeemail.models.validation.ValidateEmailsResponse;
+import br.com.coffeemail.models.webhooks.WebhookDeliveryDetail;
+import br.com.coffeemail.models.webhooks.WebhookDeliveryStatus;
 import br.com.coffeemail.support.FakeTransport;
 import br.com.coffeemail.support.Fixtures;
 import br.com.coffeemail.transport.HttpRequest;
@@ -635,5 +647,220 @@ final class ResourceBehaviorTest {
         assertThat(legacy.totalDays()).isEmpty();
         assertThat(legacy.startedAt()).isEmpty();
         assertThat(legacy.completedAt()).isEmpty();
+    }
+
+    @Test
+    void F4_listVersionsSendsOffsetPaginationAndDecodesTheSummaries() {
+        final FakeTransport transport = FakeTransport.replying(200, Fixtures.body("templates.listVersions"));
+
+        final ListTemplateVersionsResponse page = client(transport)
+                .templates()
+                .listVersions(
+                        "t_1",
+                        OffsetPaginationQuery.builder().limit(10).offset(20).build())
+                .unwrap();
+        client(transport).templates().listVersions("t_1").unwrap();
+
+        assertThat(transport.requests().get(0).uri().getPath()).isEqualTo("/v1/product/templates/t_1/versions");
+        assertThat(transport.requests().get(0).uri().getQuery()).isEqualTo("limit=10&offset=20");
+        assertThat(transport.lastRequest().uri().getQuery()).isNull();
+        assertThat(page.total()).isEqualTo(2);
+        assertThat(page.data()).extracting(TemplateVersionSummary::version).containsExactly(2, 1);
+        assertThat(page.data().get(0).createdBy()).contains(Fixtures.id("user"));
+        assertThat(page.data().get(1).createdBy()).isEmpty();
+        assertThat(page.data().get(1).subject()).isEmpty();
+    }
+
+    @Test
+    void F4_getVersionDecodesTheFullContentOfTheVersion() {
+        final FakeTransport transport = FakeTransport.replying(200, Fixtures.body("templates.getVersion"));
+
+        final TemplateVersionDetail version =
+                client(transport).templates().getVersion("t_1", 1).unwrap();
+
+        assertThat(transport.lastRequest().method().name()).isEqualTo("GET");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/templates/t_1/versions/1");
+        assertThat(version.templateId()).isEqualTo(Fixtures.id("template"));
+        assertThat(version.preheader()).contains("Que bom ter você");
+        assertThat(version.contentJson())
+                .hasValueSatisfying(json -> assertThat(json).containsKey("blocks"));
+        assertThat(version.textPayload()).isEmpty();
+        assertThat(version.variables()).extracting(TemplateVariable::name).containsExactly("nome");
+        assertThat(version.format()).isEqualTo(TemplateFormat.HTML);
+        assertThat(version.sourceLocale()).isEqualTo("pt-BR");
+        assertThat(version.summary().version()).isEqualTo(1);
+        assertThat(version.summary().createdAt()).isEqualTo(Instant.parse("2026-10-14T12:00:00Z"));
+    }
+
+    @Test
+    void F4_restoreVersionPostsWithoutBodyAndReturnsTheTemplate() {
+        final FakeTransport transport = FakeTransport.replying(200, Fixtures.body("templates.restoreVersion"));
+
+        final TemplateDetail template =
+                client(transport).templates().restoreVersion("t_1", 3).unwrap();
+
+        assertThat(transport.lastRequest().method().name()).isEqualTo("POST");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/templates/t_1/versions/3/restore");
+        assertThat(transport.lastRequest().body()).isEmpty();
+        assertThat(template.id()).isEqualTo(Fixtures.id("template"));
+    }
+
+    @Test
+    void F4_templateVersionsMapTemplateAndVersionNotFound() {
+        final var template = client(FakeTransport.replying(404, "{\"error\":{\"code\":\"TEMPLATE_NOT_FOUND\"}}"))
+                .templates()
+                .listVersions("t_x");
+        final var version = client(FakeTransport.replying(
+                        404, "{\"error\":{\"code\":\"TEMPLATE_VERSION_NOT_FOUND\",\"message\":\"sem versão\"}}"))
+                .templates()
+                .getVersion("t_1", 99);
+        final var restore = client(FakeTransport.replying(404, "{\"error\":{\"code\":\"TEMPLATE_VERSION_NOT_FOUND\"}}"))
+                .templates()
+                .restoreVersion("t_1", 99);
+
+        assertThat(template.error()).containsInstanceOf(NotFoundException.class);
+        assertThat(template.error().flatMap(error -> error.apiCode())).contains("TEMPLATE_NOT_FOUND");
+        assertThat(version.error()).containsInstanceOf(NotFoundException.class);
+        assertThat(version.error().flatMap(error -> error.apiCode())).contains("TEMPLATE_VERSION_NOT_FOUND");
+        assertThat(restore.error().flatMap(error -> error.apiCode())).contains("TEMPLATE_VERSION_NOT_FOUND");
+    }
+
+    @Test
+    void F4_getDeliveryDecodesTheRequestPayload() {
+        final FakeTransport transport = FakeTransport.replying(200, Fixtures.body("webhooks.getDelivery"));
+
+        final WebhookDeliveryDetail delivery =
+                client(transport).webhooks().getDelivery("w_1", "d_1").unwrap();
+
+        assertThat(transport.lastRequest().method().name()).isEqualTo("GET");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/webhooks/w_1/deliveries/d_1");
+        assertThat(parse(delivery.requestPayload()).path("type").asText()).isEqualTo("email.delivered");
+        assertThat(delivery.status()).isEqualTo(WebhookDeliveryStatus.SUCCESS);
+        assertThat(delivery.delivery().id()).isEqualTo(delivery.id());
+        assertThat(delivery.delivery().responseStatus()).contains(200);
+    }
+
+    @Test
+    void F4_replayDeliveryPostsWithoutBodyAndReturnsTheNewPendingDelivery() {
+        final FakeTransport transport = FakeTransport.replying(202, Fixtures.body("webhooks.replayDelivery"));
+
+        final WebhookDeliveryDetail replay =
+                client(transport).webhooks().replayDelivery("w_1", "d_1").unwrap();
+
+        assertThat(transport.lastRequest().method().name()).isEqualTo("POST");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/webhooks/w_1/deliveries/d_1/replay");
+        assertThat(transport.lastRequest().body()).isEmpty();
+        assertThat(replay.id()).isNotEqualTo(Fixtures.id("delivery"));
+        assertThat(replay.status()).isEqualTo(WebhookDeliveryStatus.PENDING);
+        assertThat(replay.attempts()).isZero();
+        assertThat(replay.responseStatus()).isEmpty();
+    }
+
+    @Test
+    void F4_deliveriesMapNotFoundPendingAndInactiveWebhook() {
+        final var missing = client(FakeTransport.replying(404, "{\"error\":{\"code\":\"WEBHOOK_DELIVERY_NOT_FOUND\"}}"))
+                .webhooks()
+                .getDelivery("w_1", "d_x");
+        final var webhook = client(FakeTransport.replying(404, "{\"error\":{\"code\":\"WEBHOOK_NOT_FOUND\"}}"))
+                .webhooks()
+                .replayDelivery("w_x", "d_1");
+        final var pending = client(FakeTransport.replying(409, "{\"error\":{\"code\":\"WEBHOOK_DELIVERY_PENDING\"}}"))
+                .webhooks()
+                .replayDelivery("w_1", "d_1");
+        final var paused = client(FakeTransport.replying(409, "{\"error\":{\"code\":\"WEBHOOK_NOT_ACTIVE\"}}"))
+                .webhooks()
+                .replayDelivery("w_1", "d_1");
+
+        assertThat(missing.error()).containsInstanceOf(NotFoundException.class);
+        assertThat(missing.error().flatMap(error -> error.apiCode())).contains("WEBHOOK_DELIVERY_NOT_FOUND");
+        assertThat(webhook.error().flatMap(error -> error.apiCode())).contains("WEBHOOK_NOT_FOUND");
+        assertThat(pending.error()).containsInstanceOf(ConflictException.class);
+        assertThat(pending.error().flatMap(error -> error.apiCode())).contains("WEBHOOK_DELIVERY_PENDING");
+        assertThat(paused.error()).containsInstanceOf(ConflictException.class);
+        assertThat(paused.error().flatMap(error -> error.apiCode())).contains("WEBHOOK_NOT_ACTIVE");
+    }
+
+    @Test
+    void F4_validatePostsTheEmailsAndDecodesItemsTotalsAndCredits() {
+        final FakeTransport transport = FakeTransport.replying(200, Fixtures.body("validation.validate"));
+
+        final ValidateEmailsResponse result = client(transport)
+                .validation()
+                .validate(List.of("cliente@gmail.com", "teste@mailinator.com", "invalido@"))
+                .unwrap();
+
+        assertThat(transport.lastRequest().method().name()).isEqualTo("POST");
+        assertThat(transport.lastRequest().uri().getPath()).isEqualTo("/v1/product/validate");
+        assertThat(body(transport.lastRequest()).path("emails")).hasSize(3);
+        assertThat(result.validCount()).isEqualTo(1);
+        assertThat(result.invalidCount()).isEqualTo(2);
+        assertThat(result.items().get(0).reason()).isEmpty();
+        assertThat(result.items().get(0).mxValid()).isTrue();
+        assertThat(result.items().get(1).isDisposable()).isTrue();
+        assertThat(result.items().get(1).reason()).contains("disposable_email");
+        assertThat(result.items().get(2).formatValid()).isFalse();
+        assertThat(result.credits().limit()).contains(1000);
+        assertThat(result.credits().remaining()).contains(997);
+        assertThat(result.credits().used()).isEqualTo(3);
+        assertThat(result.credits().isUnlimited()).isFalse();
+    }
+
+    @Test
+    void F4_validateDecodesUnlimitedCredits() {
+        final ValidateEmailsResponse result = client(FakeTransport.replying(
+                        200,
+                        Fixtures.body("validation.validate")
+                                .replace("\"limit\":1000", "\"limit\":null")
+                                .replace("\"remaining\":997", "\"remaining\":null")))
+                .validation()
+                .validate(List.of("cliente@gmail.com"))
+                .unwrap();
+
+        assertThat(result.credits().isUnlimited()).isTrue();
+        assertThat(result.credits().remaining()).isEmpty();
+    }
+
+    @Test
+    void F4_validateWithExhaustedCreditsIsARateLimitErrorSentOnce() {
+        final FakeTransport transport = FakeTransport.replying(
+                429, "{\"error\":{\"code\":\"VALIDATION_CREDITS_EXHAUSTED\",\"message\":\"créditos esgotados\"}}");
+
+        final var response = client(transport).validation().validate(List.of("cliente@gmail.com"));
+        final var invalid = client(FakeTransport.replying(400, "{\"error\":{\"code\":\"VALIDATION_FAILED\"}}"))
+                .validation()
+                .validate(List.of());
+
+        assertThat(response.error()).containsInstanceOf(RateLimitException.class);
+        assertThat(response.error().flatMap(error -> error.apiCode())).contains("VALIDATION_CREDITS_EXHAUSTED");
+        assertThat(transport.requests()).hasSize(1);
+        assertThat(invalid.error()).containsInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void F4_asyncValidationReturnsTheSameEnvelope() {
+        final CoffeeMailAsync client = CoffeeMailAsync.builder()
+                .apiKey("cm_live_test")
+                .transport(FakeTransport.replying(200, Fixtures.body("validation.validate")))
+                .build();
+
+        final ValidateEmailsResponse result = client.validation()
+                .validate(List.of("cliente@gmail.com"))
+                .join()
+                .unwrap();
+
+        assertThat(result.items()).hasSize(3);
+    }
+
+    @Test
+    void F4_sendAcceptsATemplateAlias() {
+        final FakeTransport transport = FakeTransport.replying(202, Fixtures.body("emails.send"));
+
+        client(transport)
+                .emails()
+                .send(SendEmailInput.builder("contato@loja.com.br", "cliente@gmail.com")
+                        .templateId("boas-vindas")
+                        .build());
+
+        assertThat(body(transport.lastRequest()).path("templateId").asText()).isEqualTo("boas-vindas");
     }
 }

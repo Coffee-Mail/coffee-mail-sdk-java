@@ -18,7 +18,7 @@ import org.jspecify.annotations.Nullable;
  * @param subject assunto; obrigatório quando não há {@code templateId}
  * @param html conteúdo HTML
  * @param text conteúdo em texto puro
- * @param templateId template cadastrado; não pode ser usado com {@code html}/{@code text}
+ * @param templateId id ou alias de um template cadastrado; não pode ser usado com {@code html}/{@code text}
  * @param variables variáveis do template
  * @param scheduledAt envio agendado
  * @param headers cabeçalhos MIME adicionais
