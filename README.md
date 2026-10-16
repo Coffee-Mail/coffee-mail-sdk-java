@@ -41,7 +41,7 @@
 - **Nenhuma chamada de API lança exceção**: o resultado vem em `CoffeeMailResponse<T>` (sucesso ou falha, nunca os dois). `unwrap()` existe para quem prefere exceções.
 - **Tipado**: modelos são `record`s imutáveis; enums de resposta têm o valor `UNKNOWN` para tolerar valores novos da API; builders recebem os campos obrigatórios no construtor (`SendEmailInput.builder(from, to)`).
 - **Nulidade explícita**: todos os pacotes são `@NullMarked` ([JSpecify](https://jspecify.dev)) e o build verifica com NullAway. Campos opcionais são `Optional<T>`.
-- **Validado contra o contrato da API**: as 61 operações cobertas geram requisições validadas contra o OpenAPI de produto (`spec/product.json`) em `ContractConformanceTest`.
+- **Validado contra o contrato da API**: as 71 operações cobertas geram requisições validadas contra o OpenAPI de produto (`spec/product.json`) em `ContractConformanceTest`.
 - **Dependências mínimas**: `java.net.http.HttpClient` do JDK e Jackson 2.x; o transporte HTTP é plugável (`HttpTransport`).
 - **JPMS**: módulo `br.com.coffeemail`, testado em module path e em classpath.
 
@@ -50,7 +50,7 @@
 | Item | Estado |
 | --- | --- |
 | Versão publicada | `0.1.0` no Maven Central (2026-10-14) |
-| Cobertura da API de produto | 61 operações (todas as do `product.json`, exceto `GET /v1/product/auth/csrf`, exclusiva do dashboard) |
+| Cobertura da API de produto | 71 operações (todas as do `product.json`, exceto `GET /v1/product/auth/csrf`, exclusiva do dashboard) |
 | Compatibilidade de API pública | Verificada no `check` contra a `0.1.0` (ver [Versionamento](#-versionamento-e-releases)) |
 | Idiomas das mensagens de erro | `pt-BR` (padrão) e `en` |
 
@@ -60,7 +60,6 @@ Limitações conhecidas:
 - **Sem retry automático**: `429` e `5xx` voltam como `RateLimitException`/`InternalServerException`. O `Retry-After` é exposto em `RateLimitException.retryAfterSeconds()`; a política de nova tentativa fica com quem chama.
 - **`emails().sendBatch(...)` usa um único conjunto de cabeçalhos** para o lote: se vários itens definirem `idempotencyKey`, vale a do último; `sandbox(true)` em qualquer item ativa o sandbox para o lote inteiro.
 - **`templates().previewById(...)`** não é um endpoint próprio: faz `GET /templates/{id}` e depois `POST /templates/preview` com o HTML do template (duas requisições).
-- **Campanhas agendadas**: `CreateBroadcastInput` não aceita agendamento, porque a API ainda não aceita.
 - **Lacunas do `product.json`**: 18 respostas não têm schema ou declaram status diferente do que a API devolve (ex.: exclusões que respondem `204`), e `domains.delete` exige no spec uma credencial de reautenticação que a API dispensa para chaves de API. O teste de contrato lista essas lacunas explicitamente e falha quando o spec for corrigido, para que a lista seja removida.
 - **Origem do spec**: `spec/product.json` é um snapshot do spec OpenAPI público da API de produto (`https://api.coffeemail.com.br/v1/product/docs/json`), atualizado com `./gradlew syncOpenApi`.
 
@@ -271,14 +270,14 @@ coffeemail.introspect().data().ifPresent(key -> System.out.println(key.scopes())
 | `cancel(String id)` | `NoContent` | `POST /emails/{id}/cancel` |
 | `resend(String id)` | `SendEmailResponse` | `POST /emails/{id}/resend` |
 
-`SendEmailInput.builder(from, to)` aceita `cc`, `bcc`, `replyTo`, `subject`, `html`, `text`, `templateId`, `variables`, `scheduledAt`, `headers`, `attachments`, `tags`, `idempotencyKey`, `emailType`, `suppressionCategory`, `metadata` e `sandbox`. `ListEmailsQuery` filtra por `status`, `recipient`, `fromEmail`, `subjectContains`, `apiKeyId`, `tag`, `from`/`to` (período) e pagina com `after`/`limit`.
+`SendEmailInput.builder(from, to)` aceita `cc`, `bcc`, `replyTo`, `subject`, `html`, `text`, `templateId` (id ou alias do template, como `boas-vindas`), `variables`, `scheduledAt`, `headers`, `attachments`, `tags`, `idempotencyKey`, `emailType`, `suppressionCategory`, `metadata` e `sandbox`. `ListEmailsQuery` filtra por `status`, `recipient`, `fromEmail`, `subjectContains`, `apiKeyId`, `tag`, `from`/`to` (período) e pagina com `after`/`limit`.
 
 ```java
 EmailAttachment nota = EmailAttachment.fromBytes("nota.pdf", bytes).withContentType("application/pdf");
 
 coffeemail.emails().send(SendEmailInput.builder("contato@loja.com.br", "cliente@gmail.com")
         .cc("financeiro@cliente.com.br")
-        .templateId("7c8d3f2b-8c1e-4a7d-be5f-3e4f5a601c2d")
+        .templateId("boas-vindas")
         .variables(Map.of("nome", "Ana"))
         .attachments(nota)
         .tags(new EmailTag("pedido", "123"))
@@ -300,11 +299,24 @@ coffeemail.emails().list(ListEmailsQuery.builder().status(EmailStatus.BOUNCED).l
 | `delete(String id)` | `DeleteDomainResponse` | `DELETE /domains/{id}` |
 | `getHealth(String id)` | `DomainHealthResponse` | `POST /domains/{id}/health` |
 | `getWarmupStatus(String id)` | `Optional<DomainWarmupStatus>` | `GET /domains/{id}/warmup` |
+| `rotateDkim(String id)` | `DkimRotation` | `POST /domains/{id}/dkim/rotate` |
+| `setTrackingDomain(String id, String host)` | `CustomHostStatus` | `PUT /domains/{id}/tracking-domain` |
+| `removeTrackingDomain(String id)` | `Optional<CustomHostStatus>` | `DELETE /domains/{id}/tracking-domain` |
+
+`DomainDetail` traz `dkimRotation()` (rotação pendente), `returnPath()` (return-path próprio, `bounces.<domínio>`), `trackingDomain()` (host de tracking próprio) e `trackingDomainsAvailable()` (se a plataforma permite cadastrar host de tracking). `CustomHostStatus` informa `host`, `target` (alvo do CNAME), `verified`, `verifiedAt` e o `record` a publicar. `DomainWarmupStatus` traz a fase (`status()`: `WARMING` ou `COMPLETED`), `totalDays()`, `startedAt()` e `completedAt()`.
+
+`rotateDkim` é idempotente: com uma rotação pendente, devolve a mesma. A chave em uso só muda quando o TXT do novo seletor aparece no DNS. Falha com `NotFoundException` (`apiCode()` `DOMAIN_NOT_FOUND`) ou `ConflictException` (`DOMAIN_NOT_VERIFIED`). `setTrackingDomain` falha com `ValidationException` (`INVALID_TRACKING_HOST`, host fora do domínio de envio), `ConflictException` (`TRACKING_DOMAINS_DISABLED`) ou `NotFoundException`.
 
 ```java
 coffeemail.domains().create("loja.com.br").data().ifPresent(domain ->
         domain.dkimRecordsToPublish().forEach(record ->
                 System.out.println(record.type() + " " + record.host() + " " + record.value())));
+
+coffeemail.domains().rotateDkim(domainId).data().ifPresent(rotation ->
+        System.out.println("Publique " + rotation.record().host() + " TXT " + rotation.record().value()));
+
+coffeemail.domains().setTrackingDomain(domainId, "links.loja.com.br").data().ifPresent(tracking ->
+        System.out.println(tracking.record().host() + " CNAME " + tracking.target()));
 ```
 
 ### Templates — `coffeemail.templates()`
@@ -321,6 +333,9 @@ coffeemail.domains().create("loja.com.br").data().ifPresent(domain ->
 | `format(FormatTemplateInput)` | `FormatTemplateResponse` | `POST /templates/format` |
 | `testRender(TestRenderTemplateInput)` | `TestRenderTemplateResponse` | `POST /templates/test-render` |
 | `testSend(String id, TestSendTemplateInput)` | `TestSendTemplateResponse` | `POST /templates/{id}/test-send` |
+| `listVersions(String id)` / `listVersions(String, OffsetPaginationQuery)` | `ListTemplateVersionsResponse` (`data`, `total`) | `GET /templates/{id}/versions` |
+| `getVersion(String id, int version)` | `TemplateVersionDetail` | `GET /templates/{id}/versions/{version}` |
+| `restoreVersion(String id, int version)` | `TemplateDetail` | `POST /templates/{id}/versions/{version}/restore` |
 
 Em `UpdateTemplateInput`, só os campos definidos no builder são enviados; os métodos `clear*` (`clearAlias`, `clearSubject`, `clearPreheader`, `clearContentJson`, `clearTextPayload`) enviam `null` explícito.
 
@@ -329,6 +344,17 @@ coffeemail.templates().update(templateId, UpdateTemplateInput.builder()
         .subject("Novo assunto")
         .clearPreheader()
         .build());
+```
+
+Cada alteração grava uma versão. `listVersions` devolve resumos (`TemplateVersionSummary`: `version`, `name`, `subject`, `createdBy`, `createdAt`), da mais recente para a mais antiga, com `limit` de 1 a 100 e `offset`; `getVersion` traz o conteúdo completo (`html`, `preheader`, `contentJson`, `textPayload`, `variables`, `format`, `sourceLocale`). `restoreVersion` torna aquela versão o conteúdo atual e grava o estado anterior como versão nova. Falham com `NotFoundException` e `apiCode()` `TEMPLATE_NOT_FOUND` ou `TEMPLATE_VERSION_NOT_FOUND`.
+
+```java
+coffeemail.templates()
+        .listVersions(templateId, OffsetPaginationQuery.builder().limit(10).build())
+        .data()
+        .ifPresent(page -> page.data().forEach(version -> System.out.println(version.version() + " " + version.createdAt())));
+
+coffeemail.templates().restoreVersion(templateId, 3);
 ```
 
 ### Audiências e contatos — `coffeemail.audiences()`
@@ -427,6 +453,8 @@ coffeemail.suppressions().create(CreateSuppressionInput.builder("ex-cliente@gmai
 | `delete(String id)` | `NoContent` | `DELETE /webhooks/{id}` |
 | `rotateSecret(String id)` | `RotateWebhookSecretResult` | `POST /webhooks/{id}/rotate-secret` |
 | `listDeliveries(String id)` / `listDeliveries(String, ListWebhookDeliveriesQuery)` | `ListWebhookDeliveriesResponse` | `GET /webhooks/{id}/deliveries` |
+| `getDelivery(String id, String deliveryId)` | `WebhookDeliveryDetail` (inclui `requestPayload`) | `GET /webhooks/{id}/deliveries/{deliveryId}` |
+| `replayDelivery(String id, String deliveryId)` | `WebhookDeliveryDetail` (entrega nova, `PENDING`) | `POST /webhooks/{id}/deliveries/{deliveryId}/replay` |
 | `test(String id)` | `TestWebhookResult` | `POST /webhooks/{id}/test` |
 | `verifySignature(VerifyWebhookInput)` | `boolean` | — (local, ver [Webhooks](#-webhooks)) |
 
@@ -440,7 +468,11 @@ String secret = coffeemail.webhooks()
         .secret();
 
 coffeemail.webhooks().toggle(webhookId, ToggleableWebhookStatus.PAUSED);
+
+coffeemail.webhooks().replayDelivery(webhookId, deliveryId);
 ```
+
+`getDelivery` traz o corpo JSON enviado ao endpoint em `requestPayload()`; `delivery()` devolve a mesma entrega no formato da listagem. `replayDelivery` reenvia o mesmo corpo como uma entrega nova (HTTP 202). Erros em `apiCode()`: `WEBHOOK_NOT_FOUND` e `WEBHOOK_DELIVERY_NOT_FOUND` (`NotFoundException`), `WEBHOOK_DELIVERY_PENDING` (entrega ainda em andamento) e `WEBHOOK_NOT_ACTIVE` (webhook pausado), ambos `ConflictException`.
 
 Eventos disponíveis em `WebhookEventType`: `email.queued`, `email.processing`, `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.opened`, `email.clicked`, `email.bounced`, `email.complained`, `email.failed`, `email.suppressed`, `email.scheduled`, `email.cancelled`, `email.unsubscribed`, `billing.plan_changed`.
 
@@ -457,6 +489,23 @@ coffeemail.stats().get(GetStatsQuery.builder()
         .period(StatsPeriod.LAST30D)
         .granularity(StatsGranularity.WEEK)
         .build());
+```
+
+### Validação de e-mails — `coffeemail.validation()`
+
+| Método | Retorno | HTTP |
+| --- | --- | --- |
+| `validate(List<String> emails)` | `ValidateEmailsResponse` (`items`, `validCount`, `invalidCount`, `credits`) | `POST /validate` |
+
+Valida de 1 a 100 endereços por chamada: sintaxe (`formatValid`), servidor de e-mail do domínio (`mxValid`) e domínio descartável (`isDisposable`); `reason()` traz `invalid_format`, `disposable_email` ou `no_mx_record` quando o endereço é reprovado. Cada endereço consome um crédito do mês, e `credits()` (`limit`, `used`, `remaining`, vazios quando o plano é ilimitado; `isUnlimited()`) mostra o saldo após a chamada. Com os créditos esgotados, a falha é `RateLimitException` com `apiCode()` `VALIDATION_CREDITS_EXHAUSTED`: não adianta tentar de novo antes do mês seguinte.
+
+```java
+coffeemail.validation()
+        .validate(List.of("cliente@gmail.com", "teste@mailinator.com"))
+        .data()
+        .ifPresent(result -> result.items().stream()
+                .filter(item -> item.reason().isPresent())
+                .forEach(item -> System.out.println(item.email() + ": " + item.reason().get())));
 ```
 
 ## 🔔 Webhooks

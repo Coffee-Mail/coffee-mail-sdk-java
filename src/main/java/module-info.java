@@ -21,6 +21,7 @@ module br.com.coffeemail {
     exports br.com.coffeemail.models.suppressions;
     exports br.com.coffeemail.models.webhooks;
     exports br.com.coffeemail.models.stats;
+    exports br.com.coffeemail.models.validation;
 
     opens br.com.coffeemail.models.common to
             com.fasterxml.jackson.databind;
@@ -41,6 +42,8 @@ module br.com.coffeemail {
     opens br.com.coffeemail.models.webhooks to
             com.fasterxml.jackson.databind;
     opens br.com.coffeemail.models.stats to
+            com.fasterxml.jackson.databind;
+    opens br.com.coffeemail.models.validation to
             com.fasterxml.jackson.databind;
     opens br.com.coffeemail.internal.wire to
             com.fasterxml.jackson.databind;

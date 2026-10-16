@@ -8,14 +8,17 @@ import br.com.coffeemail.internal.http.Operation;
 import br.com.coffeemail.internal.http.RequestExecutor;
 import br.com.coffeemail.internal.http.UrlBuilder;
 import br.com.coffeemail.internal.json.ResponseType;
+import br.com.coffeemail.models.common.OffsetPaginationQuery;
 import br.com.coffeemail.models.templates.CreateTemplateInput;
 import br.com.coffeemail.models.templates.FormatTemplateInput;
 import br.com.coffeemail.models.templates.FormatTemplateResponse;
+import br.com.coffeemail.models.templates.ListTemplateVersionsResponse;
 import br.com.coffeemail.models.templates.ListTemplatesQuery;
 import br.com.coffeemail.models.templates.ListTemplatesResponse;
 import br.com.coffeemail.models.templates.PreviewTemplateInput;
 import br.com.coffeemail.models.templates.PreviewTemplateResponse;
 import br.com.coffeemail.models.templates.TemplateDetail;
+import br.com.coffeemail.models.templates.TemplateVersionDetail;
 import br.com.coffeemail.models.templates.TestRenderTemplateInput;
 import br.com.coffeemail.models.templates.TestRenderTemplateResponse;
 import br.com.coffeemail.models.templates.TestSendTemplateInput;
@@ -126,5 +129,35 @@ public final class DefaultTemplatesAsync implements TemplatesAsync {
                         UrlBuilder.expand(ApiRoutes.TEMPLATE_TEST_SEND, id),
                         ResponseType.of(TestSendTemplateResponse.class))
                 .withBody(input));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<ListTemplateVersionsResponse>> listVersions(final String id) {
+        return executor.executeAsync(Operation.get(
+                UrlBuilder.expand(ApiRoutes.TEMPLATE_VERSIONS, id),
+                ResponseType.of(ListTemplateVersionsResponse.class)));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<ListTemplateVersionsResponse>> listVersions(
+            final String id, final OffsetPaginationQuery query) {
+        return executor.executeAsync(Operation.get(
+                        UrlBuilder.expand(ApiRoutes.TEMPLATE_VERSIONS, id),
+                        ResponseType.of(ListTemplateVersionsResponse.class))
+                .withQuery(query));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<TemplateVersionDetail>> getVersion(final String id, final int version) {
+        return executor.executeAsync(Operation.get(
+                UrlBuilder.expand(ApiRoutes.TEMPLATE_VERSION, id, String.valueOf(version)),
+                ResponseType.of(TemplateVersionDetail.class)));
+    }
+
+    @Override
+    public CompletableFuture<CoffeeMailResponse<TemplateDetail>> restoreVersion(final String id, final int version) {
+        return executor.executeAsync(Operation.post(
+                UrlBuilder.expand(ApiRoutes.TEMPLATE_VERSION_RESTORE, id, String.valueOf(version)),
+                ResponseType.of(TemplateDetail.class)));
     }
 }

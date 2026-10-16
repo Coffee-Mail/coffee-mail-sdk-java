@@ -2,7 +2,9 @@ package br.com.coffeemail.internal.resources;
 
 import br.com.coffeemail.CoffeeMailResponse;
 import br.com.coffeemail.models.domains.CreateDomainResponse;
+import br.com.coffeemail.models.domains.CustomHostStatus;
 import br.com.coffeemail.models.domains.DeleteDomainResponse;
+import br.com.coffeemail.models.domains.DkimRotation;
 import br.com.coffeemail.models.domains.DomainDetail;
 import br.com.coffeemail.models.domains.DomainHealthResponse;
 import br.com.coffeemail.models.domains.DomainWarmupStatus;
@@ -53,5 +55,20 @@ public final class DefaultDomains implements Domains {
     @Override
     public CoffeeMailResponse<Optional<DomainWarmupStatus>> getWarmupStatus(final String id) {
         return async.getWarmupStatus(id).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<DkimRotation> rotateDkim(final String id) {
+        return async.rotateDkim(id).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<CustomHostStatus> setTrackingDomain(final String id, final String host) {
+        return async.setTrackingDomain(id, host).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<Optional<CustomHostStatus>> removeTrackingDomain(final String id) {
+        return async.removeTrackingDomain(id).join();
     }
 }

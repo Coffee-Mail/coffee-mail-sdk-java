@@ -20,6 +20,8 @@ import br.com.coffeemail.resources.Suppressions;
 import br.com.coffeemail.resources.SuppressionsAsync;
 import br.com.coffeemail.resources.Templates;
 import br.com.coffeemail.resources.TemplatesAsync;
+import br.com.coffeemail.resources.Validation;
+import br.com.coffeemail.resources.ValidationAsync;
 import br.com.coffeemail.resources.Webhooks;
 import br.com.coffeemail.resources.WebhooksAsync;
 import br.com.coffeemail.support.FakeTransport;
@@ -50,7 +52,8 @@ final class ApiParityTest {
                 Arguments.of(Senders.class, SendersAsync.class),
                 Arguments.of(Suppressions.class, SuppressionsAsync.class),
                 Arguments.of(Webhooks.class, WebhooksAsync.class),
-                Arguments.of(Stats.class, StatsAsync.class));
+                Arguments.of(Stats.class, StatsAsync.class),
+                Arguments.of(Validation.class, ValidationAsync.class));
     }
 
     private static Set<String> signatures(final Class<?> type, final boolean unwrapFuture) {
@@ -88,7 +91,7 @@ final class ApiParityTest {
                 .collect(Collectors.toUnmodifiableSet());
 
         assertThat(sync).isEqualTo(async);
-        assertThat(sync).contains("emails", "webhooks", "stats", "introspect");
+        assertThat(sync).contains("emails", "webhooks", "stats", "validation", "introspect");
     }
 
     @Test

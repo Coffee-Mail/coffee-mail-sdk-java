@@ -11,11 +11,21 @@ Todas as mudanças relevantes deste projeto são documentadas aqui. O formato se
 - `Senders.resendVerification(String)` e `SendersAsync.resendVerification(String)` reenviam o e-mail de verificação com token novo.
 - `ContactDetail.subscribed()` e `ContactDetail.isSubscribed()` (`false` quando o contato se descadastrou).
 - Os construtores anteriores de `BroadcastDetail` e `ContactDetail` continuam disponíveis (compatibilidade binária verificada pelo `verifyApiCompatibility`).
+- `Domains.rotateDkim(String)` (e `DomainsAsync`) inicia a rotação da chave DKIM e devolve `DkimRotation` (`domainId`, `selector`, `startedAt`, `record`). Idempotente; erros `DOMAIN_NOT_FOUND` (404) e `DOMAIN_NOT_VERIFIED` (409) em `apiCode()`.
+- `Domains.setTrackingDomain(String, String)` e `Domains.removeTrackingDomain(String)` (e `DomainsAsync`) cadastram e removem o host de tracking próprio, com `CustomHostStatus` (`host`, `target`, `verified`, `verifiedAt`, `record`). Erros `INVALID_TRACKING_HOST` (400), `TRACKING_DOMAINS_DISABLED` (409) e 404 em `apiCode()`.
+- `DomainDetail.dkimRotation()`, `returnPath()`, `trackingDomain()` e `trackingDomainsAvailable()`.
+- `DomainWarmupStatus.status()` (`DomainWarmupState`: `WARMING`, `COMPLETED`), `totalDays()`, `startedAt()` e `completedAt()`.
+- Os construtores anteriores de `DomainDetail` e `DomainWarmupStatus` continuam disponíveis (compatibilidade binária verificada pelo `verifyApiCompatibility`).
+- `Templates.listVersions(String)` e `listVersions(String, OffsetPaginationQuery)` (e `TemplatesAsync`) listam as versões gravadas de um template em `ListTemplateVersionsResponse` (`data` com `TemplateVersionSummary`, `total`).
+- `Templates.getVersion(String, int)` devolve `TemplateVersionDetail` com o conteúdo completo da versão; `Templates.restoreVersion(String, int)` restaura a versão e devolve o `TemplateDetail`. Erros `TEMPLATE_NOT_FOUND` e `TEMPLATE_VERSION_NOT_FOUND` (404) em `apiCode()`.
+- `Webhooks.getDelivery(String, String)` e `Webhooks.replayDelivery(String, String)` (e `WebhooksAsync`) com `WebhookDeliveryDetail` (campos da entrega mais `requestPayload`; `delivery()` converte para `WebhookDelivery`). Erros `WEBHOOK_NOT_FOUND`/`WEBHOOK_DELIVERY_NOT_FOUND` (404) e `WEBHOOK_DELIVERY_PENDING`/`WEBHOOK_NOT_ACTIVE` (409) em `apiCode()`.
+- Recurso `CoffeeMail.validation()` / `CoffeeMailAsync.validation()` com `validate(List<String>)`: valida até 100 endereços e devolve `ValidateEmailsResponse` (`EmailValidationResult` por endereço, totais e `ValidationCredits`). Créditos do mês esgotados viram `RateLimitException` com `apiCode()` `VALIDATION_CREDITS_EXHAUSTED`, que não deve ser retentado.
 
 ### Alterado
 
 - `SenderDetail.verificationToken()` vem sempre vazio em `senders().create()`: a API não devolve mais o token, que segue por e-mail ao endereço cadastrado.
 - `broadcasts().send()` responde assim que o envio é enfileirado (`SENDING`); o progresso acompanha-se por `broadcasts().get()`.
+- `SendEmailInput.Builder.templateId(String)` aceita o id ou o alias do template.
 
 ### Removido
 

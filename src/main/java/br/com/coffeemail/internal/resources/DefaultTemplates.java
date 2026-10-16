@@ -2,14 +2,17 @@ package br.com.coffeemail.internal.resources;
 
 import br.com.coffeemail.CoffeeMailResponse;
 import br.com.coffeemail.NoContent;
+import br.com.coffeemail.models.common.OffsetPaginationQuery;
 import br.com.coffeemail.models.templates.CreateTemplateInput;
 import br.com.coffeemail.models.templates.FormatTemplateInput;
 import br.com.coffeemail.models.templates.FormatTemplateResponse;
+import br.com.coffeemail.models.templates.ListTemplateVersionsResponse;
 import br.com.coffeemail.models.templates.ListTemplatesQuery;
 import br.com.coffeemail.models.templates.ListTemplatesResponse;
 import br.com.coffeemail.models.templates.PreviewTemplateInput;
 import br.com.coffeemail.models.templates.PreviewTemplateResponse;
 import br.com.coffeemail.models.templates.TemplateDetail;
+import br.com.coffeemail.models.templates.TemplateVersionDetail;
 import br.com.coffeemail.models.templates.TestRenderTemplateInput;
 import br.com.coffeemail.models.templates.TestRenderTemplateResponse;
 import br.com.coffeemail.models.templates.TestSendTemplateInput;
@@ -86,5 +89,26 @@ public final class DefaultTemplates implements Templates {
     @Override
     public CoffeeMailResponse<TestSendTemplateResponse> testSend(final String id, final TestSendTemplateInput input) {
         return async.testSend(id, input).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<ListTemplateVersionsResponse> listVersions(final String id) {
+        return async.listVersions(id).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<ListTemplateVersionsResponse> listVersions(
+            final String id, final OffsetPaginationQuery query) {
+        return async.listVersions(id, query).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<TemplateVersionDetail> getVersion(final String id, final int version) {
+        return async.getVersion(id, version).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<TemplateDetail> restoreVersion(final String id, final int version) {
+        return async.restoreVersion(id, version).join();
     }
 }
