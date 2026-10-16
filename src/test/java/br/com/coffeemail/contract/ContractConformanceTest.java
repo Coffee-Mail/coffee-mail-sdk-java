@@ -82,13 +82,14 @@ final class ContractConformanceTest {
     private static final String PLACEHOLDER = "\\{[^}]+}";
     private static final String NO_RESPONSE_SCHEMA = "operação sem schema de resposta no product.json";
     private static final String DELETE_RETURNS_204 = "a API responde 204, mas o product.json declara outro status";
+    private static final String NO_CONTENT_DECLARES_BODY =
+            "a API responde 204 sem corpo, mas o product.json declara um corpo nulo";
     private static final Map<String, String> RESPONSE_SPEC_GAPS = Map.ofEntries(
             Map.entry("client.introspect", NO_RESPONSE_SCHEMA),
             Map.entry("audiences.list", NO_RESPONSE_SCHEMA),
             Map.entry("audiences.get", NO_RESPONSE_SCHEMA),
             Map.entry("audiences.update", NO_RESPONSE_SCHEMA),
             Map.entry("contacts.update", NO_RESPONSE_SCHEMA),
-            Map.entry("broadcasts.get", NO_RESPONSE_SCHEMA),
             Map.entry("broadcasts.send", NO_RESPONSE_SCHEMA),
             Map.entry("webhooks.toggle", NO_RESPONSE_SCHEMA),
             Map.entry("webhooks.rotateSecret", NO_RESPONSE_SCHEMA),
@@ -98,6 +99,7 @@ final class ContractConformanceTest {
             Map.entry("audiences.delete", DELETE_RETURNS_204),
             Map.entry("contacts.delete", DELETE_RETURNS_204),
             Map.entry("senders.delete", DELETE_RETURNS_204),
+            Map.entry("senders.resendVerification", NO_CONTENT_DECLARES_BODY),
             Map.entry("suppressions.delete", DELETE_RETURNS_204),
             Map.entry("suppressions.reactivate", DELETE_RETURNS_204),
             Map.entry("webhooks.delete", DELETE_RETURNS_204));
@@ -151,6 +153,10 @@ final class ContractConformanceTest {
                 .templateId(id("template"))
                 .variables(Map.of("nome", "Ana"))
                 .build();
+        final SendEmailInput withAlias = SendEmailInput.builder("contato@loja.com.br", "cliente@gmail.com")
+                .templateId("boas-vindas")
+                .variables(Map.of("nome", "Ana"))
+                .build();
         return Stream.of(
                 c(
                         "emails.send",
@@ -159,7 +165,7 @@ final class ContractConformanceTest {
                 c(
                         "emails.sendBatch",
                         "POST /v1/product/emails/batch",
-                        client -> client.emails().sendBatch(List.of(full, withTemplate))),
+                        client -> client.emails().sendBatch(List.of(full, withTemplate, withAlias))),
                 c(
                         "emails.list",
                         "GET /v1/product/emails",
@@ -227,7 +233,19 @@ final class ContractConformanceTest {
                 c(
                         "domains.getWarmupStatus",
                         "GET /v1/product/domains/{id}/warmup",
-                        client -> client.domains().getWarmupStatus(id("domain"))));
+                        client -> client.domains().getWarmupStatus(id("domain"))),
+                c(
+                        "domains.rotateDkim",
+                        "POST /v1/product/domains/{id}/dkim/rotate",
+                        client -> client.domains().rotateDkim(id("domain"))),
+                c(
+                        "domains.setTrackingDomain",
+                        "PUT /v1/product/domains/{id}/tracking-domain",
+                        client -> client.domains().setTrackingDomain(id("domain"), "links.loja.com.br")),
+                c(
+                        "domains.removeTrackingDomain",
+                        "DELETE /v1/product/domains/{id}/tracking-domain",
+                        client -> client.domains().removeTrackingDomain(id("domain"))));
     }
 
     private static Stream<ContractCase> templateCases() {
@@ -311,7 +329,25 @@ final class ContractConformanceTest {
                                                 .from("contato@loja.com.br")
                                                 .subject("Teste")
                                                 .variables(Map.of("nome", "Ana"))
-                                                .build())));
+                                                .build())),
+                c(
+                        "templates.listVersions",
+                        "GET /v1/product/templates/{id}/versions",
+                        client -> client.templates()
+                                .listVersions(
+                                        id("template"),
+                                        OffsetPaginationQuery.builder()
+                                                .limit(10)
+                                                .offset(0)
+                                                .build())),
+                c(
+                        "templates.getVersion",
+                        "GET /v1/product/templates/{id}/versions/{version}",
+                        client -> client.templates().getVersion(id("template"), 1)),
+                c(
+                        "templates.restoreVersion",
+                        "POST /v1/product/templates/{id}/versions/{version}/restore",
+                        client -> client.templates().restoreVersion(id("template"), 1)));
     }
 
     private static Stream<ContractCase> audienceCases() {
@@ -455,6 +491,10 @@ final class ContractConformanceTest {
                         "POST /v1/product/senders/verify",
                         client -> client.senders().verify(id("token"))),
                 c(
+                        "senders.resendVerification",
+                        "POST /v1/product/senders/{id}/resend-verification",
+                        client -> client.senders().resendVerification(id("sender"))),
+                c(
                         "senders.delete",
                         "DELETE /v1/product/senders/{id}",
                         client -> client.senders().delete(id("sender"))),
@@ -556,6 +596,19 @@ final class ContractConformanceTest {
                                                 .to(AT)
                                                 .limit(10)
                                                 .build())),
+                c(
+                        "webhooks.getDelivery",
+                        "GET /v1/product/webhooks/{id}/deliveries/{deliveryId}",
+                        client -> client.webhooks().getDelivery(id("webhook"), id("delivery"))),
+                c(
+                        "webhooks.replayDelivery",
+                        "POST /v1/product/webhooks/{id}/deliveries/{deliveryId}/replay",
+                        client -> client.webhooks().replayDelivery(id("webhook"), id("delivery"))),
+                c(
+                        "validation.validate",
+                        "POST /v1/product/validate",
+                        client -> client.validation()
+                                .validate(List.of("cliente@gmail.com", "teste@mailinator.com", "invalido@"))),
                 c(
                         "webhooks.test",
                         "POST /v1/product/webhooks/{id}/test",

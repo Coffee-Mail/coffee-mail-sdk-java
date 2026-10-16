@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import br.com.coffeemail.errors.AuthenticationException;
 import br.com.coffeemail.errors.ErrorCodes;
 import br.com.coffeemail.support.FakeTransport;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -88,19 +89,26 @@ final class CoffeeMailBuilderTest {
     }
 
     @Test
-    void customBaseUrlLosesTrailingSlashAndTimeoutIsForwarded() {
+    void customTimeoutIsForwardedToTheOfficialHost() {
         final FakeTransport transport = FakeTransport.replying(200, INTROSPECTION_BODY);
         final CoffeeMail client = CoffeeMail.builder()
                 .apiKey("cm_live_x")
-                .baseUrl("http://localhost:3030/")
                 .timeout(Duration.ofMillis(1500))
                 .transport(transport)
                 .build();
 
         client.introspect();
 
-        assertThat(transport.lastRequest().uri()).hasToString("http://localhost:3030/v1/product/auth/me/api-key");
+        assertThat(transport.lastRequest().uri())
+                .hasToString("https://api.coffeemail.com.br/v1/product/auth/me/api-key");
         assertThat(transport.lastTimeout()).isEqualTo(Duration.ofMillis(1500));
+    }
+
+    @Test
+    void builderDoesNotExposeTheApiHost() {
+        assertThat(CoffeeMailBuilder.class.getMethods())
+                .extracting(Method::getName)
+                .doesNotContain("baseUrl");
     }
 
     @Test

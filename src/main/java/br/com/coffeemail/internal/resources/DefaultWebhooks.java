@@ -13,6 +13,7 @@ import br.com.coffeemail.models.webhooks.TestWebhookResult;
 import br.com.coffeemail.models.webhooks.ToggleWebhookResult;
 import br.com.coffeemail.models.webhooks.ToggleableWebhookStatus;
 import br.com.coffeemail.models.webhooks.UpdateWebhookInput;
+import br.com.coffeemail.models.webhooks.WebhookDeliveryDetail;
 import br.com.coffeemail.models.webhooks.WebhookDetail;
 import br.com.coffeemail.resources.Webhooks;
 import br.com.coffeemail.resources.WebhooksAsync;
@@ -80,6 +81,16 @@ public final class DefaultWebhooks implements Webhooks {
     @Override
     public CoffeeMailResponse<TestWebhookResult> test(final String id) {
         return async.test(id).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<WebhookDeliveryDetail> getDelivery(final String id, final String deliveryId) {
+        return async.getDelivery(id, deliveryId).join();
+    }
+
+    @Override
+    public CoffeeMailResponse<WebhookDeliveryDetail> replayDelivery(final String id, final String deliveryId) {
+        return async.replayDelivery(id, deliveryId).join();
     }
 
     @Override

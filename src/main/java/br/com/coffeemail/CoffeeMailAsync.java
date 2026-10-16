@@ -11,6 +11,7 @@ import br.com.coffeemail.internal.resources.DefaultSendersAsync;
 import br.com.coffeemail.internal.resources.DefaultStatsAsync;
 import br.com.coffeemail.internal.resources.DefaultSuppressionsAsync;
 import br.com.coffeemail.internal.resources.DefaultTemplatesAsync;
+import br.com.coffeemail.internal.resources.DefaultValidationAsync;
 import br.com.coffeemail.internal.resources.DefaultWebhooksAsync;
 import br.com.coffeemail.models.common.ApiKeyIntrospection;
 import br.com.coffeemail.resources.AudiencesAsync;
@@ -21,6 +22,7 @@ import br.com.coffeemail.resources.SendersAsync;
 import br.com.coffeemail.resources.StatsAsync;
 import br.com.coffeemail.resources.SuppressionsAsync;
 import br.com.coffeemail.resources.TemplatesAsync;
+import br.com.coffeemail.resources.ValidationAsync;
 import br.com.coffeemail.resources.WebhooksAsync;
 import java.util.concurrent.CompletableFuture;
 
@@ -39,6 +41,7 @@ public final class CoffeeMailAsync {
     private final SendersAsync senders;
     private final SuppressionsAsync suppressions;
     private final WebhooksAsync webhooks;
+    private final ValidationAsync validation;
     private final StatsAsync stats;
 
     private CoffeeMailAsync(final ClientConfig config) {
@@ -52,6 +55,7 @@ public final class CoffeeMailAsync {
         this.suppressions = new DefaultSuppressionsAsync(runtime);
         this.webhooks = new DefaultWebhooksAsync(runtime);
         this.stats = new DefaultStatsAsync(runtime);
+        this.validation = new DefaultValidationAsync(runtime);
     }
 
     /**
@@ -160,6 +164,15 @@ public final class CoffeeMailAsync {
      */
     public StatsAsync stats() {
         return stats;
+    }
+
+    /**
+     * Validação de endereços de e-mail antes do envio.
+     *
+     * @return o recurso
+     */
+    public ValidationAsync validation() {
+        return validation;
     }
 
     /**

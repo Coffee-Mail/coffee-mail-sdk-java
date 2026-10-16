@@ -24,6 +24,8 @@ public final class ApiRoutes {
     public static final String DOMAIN_VERIFY = DOMAIN + VERIFY;
     public static final String DOMAIN_HEALTH = DOMAIN + "/health";
     public static final String DOMAIN_WARMUP = DOMAIN + "/warmup";
+    public static final String DOMAIN_DKIM_ROTATE = DOMAIN + "/dkim/rotate";
+    public static final String DOMAIN_TRACKING_DOMAIN = DOMAIN + "/tracking-domain";
 
     public static final String TEMPLATES = PRODUCT + "/templates";
     public static final String TEMPLATE = TEMPLATES + ID;
@@ -31,6 +33,9 @@ public final class ApiRoutes {
     public static final String TEMPLATES_FORMAT = TEMPLATES + "/format";
     public static final String TEMPLATES_TEST_RENDER = TEMPLATES + "/test-render";
     public static final String TEMPLATE_TEST_SEND = TEMPLATE + TEST_SEND;
+    public static final String TEMPLATE_VERSIONS = TEMPLATE + "/versions";
+    public static final String TEMPLATE_VERSION = TEMPLATE_VERSIONS + "/{version}";
+    public static final String TEMPLATE_VERSION_RESTORE = TEMPLATE_VERSION + "/restore";
 
     public static final String AUDIENCES = PRODUCT + "/audiences";
     public static final String AUDIENCE = AUDIENCES + ID;
@@ -47,6 +52,7 @@ public final class ApiRoutes {
     public static final String SENDERS = PRODUCT + "/senders";
     public static final String SENDERS_VERIFY = SENDERS + VERIFY;
     public static final String SENDER = SENDERS + ID;
+    public static final String SENDER_RESEND_VERIFICATION = SENDER + "/resend-verification";
 
     public static final String SUPPRESSIONS = PRODUCT + "/suppressions";
     public static final String SUPPRESSIONS_BULK = SUPPRESSIONS + BULK;
@@ -58,6 +64,10 @@ public final class ApiRoutes {
     public static final String WEBHOOK_TEST = WEBHOOK + "/test";
     public static final String WEBHOOK_DELIVERIES = WEBHOOK + "/deliveries";
     public static final String WEBHOOK_ROTATE_SECRET = WEBHOOK + "/rotate-secret";
+    public static final String WEBHOOK_DELIVERY = WEBHOOK_DELIVERIES + "/{deliveryId}";
+    public static final String WEBHOOK_DELIVERY_REPLAY = WEBHOOK_DELIVERY + "/replay";
+
+    public static final String VALIDATE = PRODUCT + "/validate";
 
     public static final String STATS = PRODUCT + "/stats";
 
