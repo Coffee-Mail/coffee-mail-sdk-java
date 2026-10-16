@@ -1,6 +1,7 @@
 package br.com.coffeemail.models.broadcasts;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -8,7 +9,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Dados para criar uma campanha. Exatamente um entre template e HTML: use {@link #fromTemplate} ou {@link #fromHtml}.
- * O envio agendado ainda não é aceito pela API.
+ * {@link Builder#scheduledAt(Instant)} agenda o envio: a campanha nasce {@code scheduled}.
  */
 public final class CreateBroadcastInput {
 
@@ -95,6 +96,17 @@ public final class CreateBroadcastInput {
 
         public Builder replyTo(final String value) {
             fields.put("replyTo", value);
+            return this;
+        }
+
+        /**
+         * Agenda o envio para um instante futuro.
+         *
+         * @param value instante do disparo
+         * @return o builder
+         */
+        public Builder scheduledAt(final Instant value) {
+            fields.put("scheduledAt", value.toString());
             return this;
         }
 
